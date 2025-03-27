@@ -1,4 +1,4 @@
-# persist-text-scale.el
+# persist-text-scale.el - Emacs package that persists and restores the text scale for files and special buffers
 ![Build Status](https://github.com/jamescherti/persist-text-scale.el/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
 ![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
