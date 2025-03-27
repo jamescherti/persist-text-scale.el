@@ -28,7 +28,9 @@ To install *persist-text-scale* with `straight.el`:
   :straight (persist-text-scale
              :type git
              :host github
-             :repo "jamescherti/persist-text-scale.el"))
+             :repo "jamescherti/persist-text-scale.el")
+  :config
+  (persist-text-scale-mode))
 ```
 
 ### Emacs: Installing with use-package and :vc (Built-in feature in Emacs version >= 30)
@@ -39,7 +41,10 @@ To install *persist-text-scale* with `use-package` and `:vc` (Emacs >= 30):
 (use-package persist-text-scale
   :ensure t
   :vc (:url "https://github.com/jamescherti/persist-text-scale.el"
-       :rev :newest))
+       :rev :newest)
+  :commands persist-text-scale-mode
+  :config
+  (persist-text-scale-mode))
 ```
 
 ## Doom Emacs
@@ -57,8 +62,7 @@ Here is how to install *compile-angel* on Doom Emacs:
 ```elisp
 ;; TODO: Load the mode here
 (after! persist-text-scale
- ;; TODO: setq options
- )
+  (persist-text-scale-mode))
 ```
 
 3. Run the `doom sync` command:
