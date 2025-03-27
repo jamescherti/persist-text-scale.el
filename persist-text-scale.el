@@ -256,8 +256,7 @@ If a text scale value is found, it sets the text scale using `text-scale-set'."
           (write-region-annotate-functions nil)
           (write-region-post-annotation-function nil))
       (write-region
-       (point-min) (point-max) persist-text-scale-file nil 'silent)
-      (indent-region (point-min) (point-max)))))
+       (point-min) (point-max) persist-text-scale-file nil 'silent))))
 
 (defun persist-text-scale-load ()
   "Load data from `persist-text-scale-file'."
