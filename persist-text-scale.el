@@ -34,7 +34,7 @@
 ;;; Defcustom
 
 (defgroup persist-text-scale nil
-  "Non-nil if persist-text-scale mode mode is enabled."
+  "Non-nil if persist-text-scale mode is enabled."
   :group 'persist-text-scale
   :prefix "persist-text-scale-")
 
@@ -63,9 +63,9 @@ in debugging or monitoring behavior."
   :type 'boolean
   :group 'persist-text-scale)
 
-(defcustom persist-text-scale-buffer-type-function nil
+(defcustom persist-text-scale-buffer-category-function nil
   "Optional function to customize buffer type classification.
-If non-nil, this function overrides `persist-text-scale--buffer-type' and is
+If non-nil, this function overrides `persist-text-scale--buffer-category' and is
 invoked to determine the buffer type identifier used for text scale grouping.
 It must return a string or symbol representing the buffer type, or nil to fall
 back to the default classification."
@@ -120,12 +120,12 @@ timer."
                               #'persist-text-scale-save))
       (persist-text-scale--cancel-timer))))
 
-(defun persist-text-scale--buffer-type ()
+(defun persist-text-scale--buffer-category ()
   "Generate a unique name for the current buffer.
 Returns a unique identifier string based."
   (let ((result nil))
-    (when persist-text-scale-buffer-type-function
-      (setq result (funcall persist-text-scale-buffer-type-function)))
+    (when persist-text-scale-buffer-category-function
+      (setq result (funcall persist-text-scale-buffer-category-function)))
 
     (when (or (not result)
               (not (eq result :ignore)))
@@ -134,23 +134,23 @@ Returns a unique identifier string based."
         (cond
          ;; Corfu adjusts the text size based on the size of the window from
          ;; which the text completion is triggered.
-         ((string-prefix-p " *corfu" buffer-name)
-          :ignore)
+         ;; ((string-prefix-p " *corfu" buffer-name)
+         ;;  :ignore)
 
-         ((string-prefix-p "*pathaction:" buffer-name)
-          "type-pathaction")
-
-         ((string-equal buffer-name "*scratch*")
-          "scratch")
+         ;; Special buffers
+         ((and (not file-name)
+               (or (string-prefix-p "*" buffer-name)
+                   (string-prefix-p " " buffer-name)
+                   (derived-mode-p 'special-mode)))
+          (setq result (concat "special:" buffer-name)))
 
          (file-name
-          (setq result (format "file:%s" (file-truename file-name)))
-          ;; (setq result "file")
-          )
+          (setq result (format "file:%s" (file-truename file-name))))
 
          ((boundp 'major-mode)
           (let ((major-mode-symbol (symbol-name major-mode)))
             (setq result (concat "major-mode:" major-mode-symbol))))
+
          (t
           (setq result "unknown")))))
     ;; Return result
@@ -159,9 +159,9 @@ Returns a unique identifier string based."
       result)))
 
 (defun persist-text-scale-get-amount ()
-  "Retrieve the text scale factor for the current buffer type.
-Returns nil when the buffer type is nil."
-  (let ((mode (persist-text-scale--buffer-type)))
+  "Retrieve the text scale factor for the current buffer category.
+Returns nil when the buffer category is nil."
+  (let ((mode (persist-text-scale--buffer-category)))
     (when (and mode persist-text-scale--data)
       (let ((scale (or (cdr (assoc mode persist-text-scale--data))
                        persist-text-scale--previous-text-scale-amount)))
@@ -175,19 +175,21 @@ If the buffer's identifier already has a stored text scale, it updates the
 existing value. Otherwise, it adds a new cons cell (mode . scale) to the
 alist."
   (when (bound-and-true-p persist-text-scale-mode)
-    (let ((buffer-type (persist-text-scale--buffer-type)))
+    (let ((buffer-category (persist-text-scale--buffer-category)))
       (when persist-text-scale-verbose
         (message "[persist-text-scale] Persist %s: %s: %s"
-                 (buffer-name) buffer-type text-scale-mode-amount))
+                 (buffer-name) buffer-category text-scale-mode-amount))
       (let ((cons-value (and persist-text-scale--data
-                             (when buffer-type
-                               (assoc buffer-type persist-text-scale--data)))))
+                             (when buffer-category
+                               (assoc buffer-category
+                                      persist-text-scale--data)))))
         (if cons-value
             (setcdr cons-value text-scale-mode-amount)
-          (push (cons buffer-type text-scale-mode-amount)
+          (push (cons buffer-category text-scale-mode-amount)
                 persist-text-scale--data))
 
-        (setq persist-text-scale--previous-text-scale-amount text-scale-mode-amount)))))
+        (setq persist-text-scale--previous-text-scale-amount
+              text-scale-mode-amount)))))
 
 (defun persist-text-scale-restore (&optional object &rest _)
   "Restore the text scale for the current buffer .
@@ -227,7 +229,7 @@ If a text scale value is found, it sets the text scale using `text-scale-set'."
                      (when persist-text-scale-verbose
                        (message "[persist-text-scale] Restore %s: %s: %s"
                                 (buffer-name buffer)
-                                (persist-text-scale--buffer-type)
+                                (persist-text-scale--buffer-category)
                                 amount))
                      (setq persist-text-scale--restored-p t)
                      (setq persist-text-scale--restored-amount amount)
@@ -239,10 +241,22 @@ If a text scale value is found, it sets the text scale using `text-scale-set'."
 
 (defun persist-text-scale-reset ()
   "Reset the text scale for all buffer categories."
+  (dolist (buf (buffer-list))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (when persist-text-scale--restored-p
+          (setq persist-text-scale--restored-p nil))
+
+        (when persist-text-scale--restored-amount
+          (setq persist-text-scale--restored-amount nil)))))
+
   (setq persist-text-scale--data nil))
 
 (defun persist-text-scale-save ()
-  "Save data to `persist-text-scale-file'."
+  "Save the current text scale data to `persist-text-scale-file'.
+
+This function writes the text scale data to the file specified by
+`persist-text-scale-file', preserving the state for future sessions."
   (with-temp-buffer
     (insert ";; -*- mode: emacs-lisp; coding: utf-8-unix -*-\n")
     (insert (concat ";; Persist Text Scale file, automatically generated "
