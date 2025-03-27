@@ -64,11 +64,11 @@ in debugging or monitoring behavior."
   :group 'persist-text-scale)
 
 (defcustom persist-text-scale-buffer-category-function nil
-  "Optional function to customize buffer type classification.
+  "Optional function to customize buffer category classification.
 If non-nil, this function overrides `persist-text-scale--buffer-category' and is
-invoked to determine the buffer type identifier used for text scale grouping.
-It must return a string or symbol representing the buffer type, or nil to fall
-back to the default classification."
+invoked to determine the buffer category identifier used for text scale
+grouping. It must return a string or symbol representing the buffer category, or
+nil to fall back to the default classification."
   :type '(choice (const :tag "None" nil) function)
   :group 'persist-text-scale)
 
@@ -89,8 +89,8 @@ If set to nil, disables timer-based autosaving entirely."
 
 (defvar persist-text-scale--data nil
   "Alist mapping buffer identifiers to their corresponding text scale amount.
-Each entry associates either a file path or a buffer type name with the numeric
-value of the text scale applied to that buffer or group.")
+Each entry associates either a file path or a buffer category name with the
+numeric value of the text scale applied to that buffer or group.")
 
 (defvar persist-text-scale--last-text-scale-amount nil
   "Most recent text scale amount selected by the user.
