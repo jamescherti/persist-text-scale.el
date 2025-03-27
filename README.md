@@ -42,7 +42,6 @@ To install *persist-text-scale* with `use-package` and `:vc` (Emacs >= 30):
   :ensure t
   :vc (:url "https://github.com/jamescherti/persist-text-scale.el"
        :rev :newest)
-  :commands persist-text-scale-mode
   :config
   (persist-text-scale-mode))
 ```
