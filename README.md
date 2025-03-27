@@ -3,7 +3,16 @@
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
 ![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
 
-Persist and restore text scale.
+The **persist-text-scale** is an Emacs package that persists and restores the text scale for files and special buffers. By default, it saves the text scale individually for each file and applies a shared text scale for categories of special buffers. This behavior ensures a consistent and personalized reading experience across sessions.
+
+You can customize how buffer categories are determined by setting using a function. This function should return a category identifier based on the buffer context. Buffers within the same category will share the same text scale.
+
+## Features
+
+- Automatically persists the text scale for every file buffer.
+- Applies a shared text scale for categories of special buffers.
+- Fully customizable categorization logic for text scale grouping.
+- Lightweight and efficient with minimal configuration.
 
 ## Installation
 
