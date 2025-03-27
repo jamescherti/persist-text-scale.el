@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         emacs-version:
-          - 24.3
+          - 25.1
           - 26.3
           - 27.1
           - 28.1
