@@ -83,20 +83,24 @@ If set to nil, disables timer-based autosaving entirely."
 
 ;;; Variables
 
+(defvar persist-text-scale-depth-window-buffer-change-functions -99)
+(defvar persist-text-scale-depth-find-file-hook -99)
+(defvar persist-text-scale-depth-text-scale-mode 99)
+
 (defvar persist-text-scale--data nil
   "Alist mapping buffer identifiers to their corresponding text scale amount.
 Each entry associates either a file path or a buffer type name with the numeric
 value of the text scale applied to that buffer or group.")
 
-(defvar persist-text-scale--previous-text-scale-amount 0
+(defvar persist-text-scale--last-text-scale-amount nil
   "Most recent text scale amount selected by the user.
 This value reflects the numeric text scale adjustment applied in the last
 interactive text scale change and is used internally to support restoration.")
 
-(defvar persist-text-scale--timer nil)
+;; Internal variables
 
-(defvar-local persist-text-scale--restored-p nil)
-(defvar-local persist-text-scale--restored-amount nil)
+(defvar persist-text-scale--timer nil)
+(defvar-local persist-text-scale--amount nil)
 
 ;;; Defun
 
@@ -163,8 +167,16 @@ Returns a unique identifier string based."
 Returns nil when the buffer category is nil."
   (let ((mode (persist-text-scale--buffer-category)))
     (when (and mode persist-text-scale--data)
-      (let ((scale (or (cdr (assoc mode persist-text-scale--data))
-                       persist-text-scale--previous-text-scale-amount)))
+      (let (scale
+            (mode-data (or (cdr (assoc mode persist-text-scale--data))
+                           persist-text-scale--last-text-scale-amount)))
+        (cond
+         ((integerp mode-data)
+          (setq scale mode-data))
+
+         ((listp mode-data)
+          (setq scale (cdr (assoc 'text-scale-amount mode-data)))))
+
         (when scale
           (let ((amount scale))
             amount))))))
@@ -174,22 +186,30 @@ Returns nil when the buffer category is nil."
 If the buffer's identifier already has a stored text scale, it updates the
 existing value. Otherwise, it adds a new cons cell (mode . scale) to the
 alist."
-  (when (bound-and-true-p persist-text-scale-mode)
-    (let ((buffer-category (persist-text-scale--buffer-category)))
+  (when (and (bound-and-true-p persist-text-scale-mode)
+             (bound-and-true-p text-scale-mode-amount))
+    (cond
+     ((eq text-scale-mode-amount persist-text-scale--amount)
       (when persist-text-scale-verbose
-        (message "[persist-text-scale] Persist %s: %s: %s"
-                 (buffer-name) buffer-category text-scale-mode-amount))
-      (let ((cons-value (and persist-text-scale--data
-                             (when buffer-category
-                               (assoc buffer-category
-                                      persist-text-scale--data)))))
-        (if cons-value
-            (setcdr cons-value text-scale-mode-amount)
-          (push (cons buffer-category text-scale-mode-amount)
-                persist-text-scale--data))
+        (message "[persist-text-scale] IGNORE (up-to-date): Persist %s: %s"
+                 (buffer-name) text-scale-mode-amount)))
 
-        (setq persist-text-scale--previous-text-scale-amount
-              text-scale-mode-amount)))))
+     (t
+      (let ((buffer-category (persist-text-scale--buffer-category)))
+        (when persist-text-scale-verbose
+          (message "[persist-text-scale] Persist %s: %s: %s"
+                   (buffer-name) buffer-category text-scale-mode-amount))
+        (let ((cons-value (and persist-text-scale--data
+                               (when buffer-category
+                                 (assoc buffer-category
+                                        persist-text-scale--data)))))
+          (let ((new-data (list (cons 'text-scale-amount text-scale-mode-amount)
+                                (cons 'mtime (current-time)))))
+            (if cons-value
+                (setcdr cons-value new-data)
+              (push (cons buffer-category new-data) persist-text-scale--data)))
+          (setq persist-text-scale--last-text-scale-amount
+                text-scale-mode-amount)))))))
 
 (defun persist-text-scale-restore (&optional object &rest _)
   "Restore the text scale for the current buffer .
@@ -225,15 +245,23 @@ If a text scale value is found, it sets the text scale using `text-scale-set'."
                    (when (and amount
                               (or (not persist-text-scale-restore-once)
                                   (and persist-text-scale-restore-once
-                                       (not persist-text-scale--restored-p))))
-                     (when persist-text-scale-verbose
-                       (message "[persist-text-scale] Restore %s: %s: %s"
-                                (buffer-name buffer)
-                                (persist-text-scale--buffer-category)
-                                amount))
-                     (setq persist-text-scale--restored-p t)
-                     (setq persist-text-scale--restored-amount amount)
-                     (text-scale-set amount))))))
+                                       (not persist-text-scale--amount))))
+
+                     (if (= amount text-scale-mode-amount)
+                         (when persist-text-scale-verbose
+                           (message
+                            (concat "[persist-text-scale] IGNORED "
+                                    "(up-to-date): Restore %s: %s: %s")
+                            (buffer-name buffer)
+                            (persist-text-scale--buffer-category)
+                            amount))
+                       (when persist-text-scale-verbose
+                         (message "[persist-text-scale] Restore %s: %s: %s"
+                                  (buffer-name buffer)
+                                  (persist-text-scale--buffer-category)
+                                  amount))
+                       (setq persist-text-scale--amount amount)
+                       (text-scale-set amount)))))))
            ;; Do not exclude the mini buffer
            nil
            ;; nil = current frame only | t = all frames
@@ -244,11 +272,8 @@ If a text scale value is found, it sets the text scale using `text-scale-set'."
   (dolist (buf (buffer-list))
     (when (buffer-live-p buf)
       (with-current-buffer buf
-        (when persist-text-scale--restored-p
-          (setq persist-text-scale--restored-p nil))
-
-        (when persist-text-scale--restored-amount
-          (setq persist-text-scale--restored-amount nil)))))
+        (when persist-text-scale--amount
+          (setq persist-text-scale--amount nil)))))
 
   (setq persist-text-scale--data nil))
 
@@ -264,6 +289,10 @@ This function writes the text scale data to the file specified by
 
     (insert "(setq persist-text-scale--data '")
     (prin1 persist-text-scale--data (current-buffer))
+    (insert ")\n\n")
+
+    (insert "(setq persist-text-scale--last-text-scale-amount '")
+    (prin1 persist-text-scale--last-text-scale-amount (current-buffer))
     (insert ")\n\n")
 
     (let ((coding-system-for-write 'utf-8-emacs)
@@ -289,9 +318,13 @@ This function writes the text scale data to the file specified by
         (persist-text-scale-load)
         (persist-text-scale--manage-timer)
         (add-hook 'kill-emacs-hook #'persist-text-scale-save)
-        (add-hook 'window-buffer-change-functions #'persist-text-scale-restore 99)
-        (add-hook 'find-file-hook #'persist-text-scale-restore 99)
-        (add-hook 'text-scale-mode-hook #'persist-text-scale-persist 99))
+        (add-hook 'window-buffer-change-functions #'persist-text-scale-restore
+                  persist-text-scale-depth-window-buffer-change-functions)
+        (add-hook 'find-file-hook #'persist-text-scale-restore
+                  persist-text-scale-depth-find-file-hook)
+        ;; Hook: when text scale is changed
+        (add-hook 'text-scale-mode-hook #'persist-text-scale-persist
+                  persist-text-scale-depth-text-scale-mode))
     (persist-text-scale--cancel-timer)
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save)
     (remove-hook 'window-buffer-change-functions #'persist-text-scale-restore)
