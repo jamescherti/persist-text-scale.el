@@ -186,13 +186,13 @@ alist."
     (cond
      ((eq text-scale-mode-amount persist-text-scale--amount)
       (when persist-text-scale-verbose
-        (message "[persist-text-scale] IGNORE (up-to-date): Persist %s: %s"
+        (message "[persist-text-scale] IGNORE (up-to-date): Persist '%s': %s"
                  (buffer-name) text-scale-mode-amount)))
 
      (t
       (let ((buffer-category (persist-text-scale--buffer-category)))
         (when persist-text-scale-verbose
-          (message "[persist-text-scale] Persist %s: %s: %s"
+          (message "[persist-text-scale] Persist '%s': %s: %s"
                    (buffer-name) buffer-category text-scale-mode-amount))
         (let ((cons-value (and persist-text-scale--data
                                (when buffer-category
@@ -246,12 +246,12 @@ If a text scale value is found, it sets the text scale using `text-scale-set'."
                          (when persist-text-scale-verbose
                            (message
                             (concat "[persist-text-scale] IGNORED "
-                                    "(up-to-date): Restore %s: %s: %s")
+                                    "(up-to-date): Restore '%s': %s: %s")
                             (buffer-name buffer)
                             (persist-text-scale--buffer-category)
                             amount))
                        (when persist-text-scale-verbose
-                         (message "[persist-text-scale] Restore %s: %s: %s"
+                         (message "[persist-text-scale] Restore '%s': %s: %s"
                                   (buffer-name buffer)
                                   (persist-text-scale--buffer-category)
                                   amount))
