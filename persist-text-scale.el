@@ -136,11 +136,6 @@ Returns a unique identifier string based."
       (let ((file-name (buffer-file-name (buffer-base-buffer)))
             (buffer-name (buffer-name)))
         (cond
-         ;; Corfu adjusts the text size based on the size of the window from
-         ;; which the text completion is triggered.
-         ;; ((string-prefix-p " *corfu" buffer-name)
-         ;;  :ignore)
-
          ;; Special buffers
          ((and (not file-name)
                (or (string-prefix-p "*" buffer-name)
