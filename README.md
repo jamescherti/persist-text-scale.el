@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
 ![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
 
-The **persist-text-scale** Emacs package provides `persist-text-scale-mode`, which ensures that the built-in `text-scale-mode` text scale is persisted and restored across all buffers.
+The **persist-text-scale** Emacs package ensures that the built-in `text-scale-mode` text scale is persisted and restored across all buffers.
 
 The built-in `text-scale-mode` in Emacs is a minor mode that allows users to temporarily adjust the font size within a specific buffer without affecting other buffers or the global font settings. It provides commands like `text-scale-increase` and `text-scale-decrease` to enlarge or shrink the text, making it useful for improving readability in individual buffers.
 
@@ -14,7 +14,7 @@ However, `text-scale-mode` changes are not persistent across sessions, so when E
 ## Features
 
 - Automatically saves and restores the text scale for every buffer.
-- Periodically autosaves every `persist-text-scale-autosave-interval` seconds.
+- Periodically autosaves every `persist-text-scale-autosave-interval` seconds. (You can set it to `nil` to disable it, or specify a number of seconds to enable it.)
 - Supports shared text scaling for buffer categories.
 - Provides fully customizable logic for grouping buffers by text scale.
 - Lightweight, efficient, and requires minimal configuration.
