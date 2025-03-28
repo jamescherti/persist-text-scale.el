@@ -5,11 +5,9 @@
 
 The **persist-text-scale** Emacs package ensures that the built-in `text-scale-mode` text scale is persisted and restored.
 
-The built-in `text-scale-mode` in Emacs is a minor mode that allows users to temporarily adjust the font size within a specific buffer without affecting other buffers or the global font settings. It provides commands like `text-scale-increase` and `text-scale-decrease` to enlarge or shrink the text, making it useful for improving readability in individual buffers. However, `text-scale-mode` changes are not persistent across sessions, so when Emacs is restarted or a buffer is closed and reopened, the text scaling resets to its default size.
+The `persist-text-scale` package ensures that all changes made with `text-scale-increase` and `text-scale-decrease` are persisted and restored. As a result, even after restarting Emacs, the text size in each buffer will remain consistent.
 
-**This is where this package, persist-text-scale, becomes useful, as it ensures that text scaling is preserved across sessions.**
-
-*(By default, `persist-text-scale-mode` saves the text scale individually for each file-visiting buffer and a custom text scale for every special buffer. This behavior ensures a consistent and personalized reading experience across sessions. You can customize how buffer categories are determined by setting using a function. This function should return a category identifier based on the buffer context. Buffers within the same category will share the same text scale.)*
+*(By default, `persist-text-scale-mode` saves the text scale individually for each file-visiting buffer and applies a custom text scale for each special buffer. This behavior can be customized by setting `persist-text-scale-buffer-category-function` to your own function, which determines how buffers are classified. The function should return a category identifier based on the buffer's context. Buffers within the same category will share the same text scale.)*
 
 ## Features
 
