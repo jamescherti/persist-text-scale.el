@@ -253,7 +253,8 @@ If a text scale value is found, it sets the text scale using `text-scale-set'."
                                   (and persist-text-scale-restore-once
                                        (not persist-text-scale--amount))))
 
-                     (if (= amount text-scale-mode-amount)
+                     (if (and (bound-and-true-p text-scale-mode-amount)
+                              (= amount text-scale-mode-amount))
                          (when persist-text-scale-verbose
                            (message
                             (concat "[persist-text-scale] IGNORED "
