@@ -23,11 +23,9 @@
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; The persist-text-scale Emacs package ensures that the built-in
-;; text-scale-mode text scale is persisted and restored.
-;;
-;; The persist-text-scale package ensures that all changes made with
+;; The persist-text-scale Emacs package ensures that all changes made with
 ;; text-scale-increase and text-scale-decrease are persisted and restored.
+;;
 ;; As a result, even after restarting Emacs, the text size in each buffer will
 ;; remain consistent.
 ;;

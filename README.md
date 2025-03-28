@@ -3,9 +3,9 @@
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
 ![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
 
-The **persist-text-scale** Emacs package ensures that the built-in `text-scale-mode` text scale is persisted and restored.
+The **persist-text-scale** Emacs package ensures that all changes made with `text-scale-increase` and `text-scale-decrease` are persisted and restored.
 
-The `persist-text-scale` package ensures that all changes made with `text-scale-increase` and `text-scale-decrease` are persisted and restored. As a result, even after restarting Emacs, the text size in each buffer will remain consistent.
+As a result, even after restarting Emacs, the text size in each buffer will remain consistent.
 
 *(By default, `persist-text-scale-mode` saves the text scale individually for each file-visiting buffer and applies a custom text scale for each special buffer. This behavior can be customized by setting `persist-text-scale-buffer-category-function` to your own function, which determines how buffers are classified. The function should return a category identifier based on the buffer's context. Buffers within the same category will share the same text scale.)*
 
