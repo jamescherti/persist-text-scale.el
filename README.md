@@ -91,6 +91,7 @@ This program is free software: you can redistribute it and/or modify it under th
 ## Links
 
 - [persist-text-scale.el @GitHub](https://github.com/jamescherti/persist-text-scale.el)
+- [Text Scale (Emacs documentation)](https://www.gnu.org/software/emacs/manual/html_node/emacs/Text-Scale.html)
 
 Other Emacs packages by the same author:
 - [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d): This repository hosts a minimal Emacs configuration designed to serve as a foundation for your vanilla Emacs setup and provide a solid base for an enhanced Emacs experience.
