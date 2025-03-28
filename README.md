@@ -3,16 +3,22 @@
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
 ![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
 
-The **persist-text-scale** is an Emacs package that persists and restores the text scale for files and special buffers. By default, it saves the text scale individually for each file and applies a shared text scale for categories of special buffers. This behavior ensures a consistent and personalized reading experience across sessions.
+The **persist-text-scale** Emacs package persists and restores the built-in `text-scale-mode` text scale for all buffers.
 
-You can customize how buffer categories are determined by setting using a function. This function should return a category identifier based on the buffer context. Buffers within the same category will share the same text scale.
+The built-in `text-scale-mode` in Emacs is a minor mode that allows users to temporarily adjust the font size within a specific buffer without affecting other buffers or the global font settings. It provides commands like `text-scale-increase` and `text-scale-decrease` to enlarge or shrink the text, making it useful for improving readability in individual buffers.
+
+However, `text-scale-mode` changes are not persistent across sessions, so when Emacs is restarted or a buffer is closed and reopened, the text scaling resets to its default size. This is where this package becomes useful, as it ensures that text scaling is preserved across sessions.
+
+*(By default, it saves the text scale individually for each file-visiting buffer and a custom text scale for every special buffer. This behavior ensures a consistent and personalized reading experience across sessions. You can customize how buffer categories are determined by setting using a function. This function should return a category identifier based on the buffer context. Buffers within the same category will share the same text scale.)*
 
 ## Features
 
-- Automatically persist and restore the text scale for every buffer.
-- Applies a shared text scale for categories of buffers.
-- Fully customizable categorization logic for text scale grouping.
-- Lightweight and efficient with minimal configuration.
+- Automatically saves and restores the text scale for every buffer.
+- Periodically autosaves every `persist-text-scale-autosave-interval` seconds.
+- Supports shared text scaling for buffer categories.
+- Provides fully customizable logic for grouping buffers by text scale.
+- Lightweight, efficient, and requires minimal configuration.
+- Allows specifying a function to customize buffer categorization.
 
 ## Installation
 
@@ -29,6 +35,8 @@ To install *persist-text-scale* with `straight.el`:
              :type git
              :host github
              :repo "jamescherti/persist-text-scale.el")
+  :custom
+  (persist-text-scale-autosave-interval (* 7 60))
   :config
   (persist-text-scale-mode))
 ```
@@ -42,13 +50,15 @@ To install *persist-text-scale* with `use-package` and `:vc` (Emacs >= 30):
   :ensure t
   :vc (:url "https://github.com/jamescherti/persist-text-scale.el"
        :rev :newest)
+  :custom
+  (persist-text-scale-autosave-interval (* 7 60))
   :config
   (persist-text-scale-mode))
 ```
 
 ## Doom Emacs
 
-Here is how to install *compile-angel* on Doom Emacs:
+Here is how to install *persist-text-scale* on Doom Emacs:
 
 1. Add to the `~/.doom.d/packages.el` file:
 ```elisp
@@ -61,6 +71,7 @@ Here is how to install *compile-angel* on Doom Emacs:
 ```elisp
 ;; TODO: Load the mode here
 (after! persist-text-scale
+  (setq persist-text-scale-autosave-interval (* 7 60))
   (persist-text-scale-mode))
 ```
 
