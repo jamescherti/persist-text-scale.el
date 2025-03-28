@@ -9,8 +9,8 @@ You can customize how buffer categories are determined by setting using a functi
 
 ## Features
 
-- Automatically persists the text scale for every file buffer.
-- Applies a shared text scale for categories of special buffers.
+- Automatically persist and restore the text scale for every buffer.
+- Applies a shared text scale for categories of buffers.
 - Fully customizable categorization logic for text scale grouping.
 - Lightweight and efficient with minimal configuration.
 
