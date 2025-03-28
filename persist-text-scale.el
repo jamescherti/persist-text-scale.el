@@ -294,11 +294,13 @@ This function writes the text scale data to the file specified by
     (insert (concat ";; Persist Text Scale file, automatically generated "
                     "by ‘persist-text-scale’.\n"))
 
-    (insert "(setq persist-text-scale--data '")
+    (insert "(setq persist-text-scale--data ")
+    (unless (eq persist-text-scale--data nil)
+      (insert "'"))
     (prin1 persist-text-scale--data (current-buffer))
     (insert ")\n\n")
 
-    (insert "(setq persist-text-scale--last-text-scale-amount '")
+    (insert "(setq persist-text-scale--last-text-scale-amount ")
     (prin1 persist-text-scale--last-text-scale-amount (current-buffer))
     (insert ")\n\n")
 
