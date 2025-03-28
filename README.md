@@ -9,11 +9,11 @@ The **persist-text-scale** Emacs package provides `persist-text-scale-mode`, whi
 
 ## Features
 
+- Lightweight and efficient, requiring minimal configuration.
 - Automatically persists and restores the text scale for all buffers.
 - Periodically autosaves at intervals defined by `persist-text-scale-autosave-interval` (can be set to `nil` to disable or specified in seconds to enable).
 - Supports unified text scaling across buffer categories.
 - Offers fully customizable logic for categorizing buffers based on text scale.
-- Lightweight and efficient, requiring minimal configuration.
 - Enables custom buffer categorization by specifying a function for the `persist-text-scale-buffer-category-function` variable, ensuring that groups of buffers share the same persisted and restored text scale.
 
 ## Installation

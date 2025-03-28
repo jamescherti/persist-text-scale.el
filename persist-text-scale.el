@@ -58,14 +58,22 @@ It can be customized to a different file path as needed."
   :type 'file
   :group 'persist-text-scale)
 
-(defcustom persist-text-scale-restore-once t
-  "If non-nil, restore text scale only once per buffer.
-When non-nil, the text scale will be restored either when the buffer is loaded
-or when the buffer is displayed in a window for the first time. Subsequent
-window changes will not trigger additional restoration.
+(defcustom persist-text-scale-autosave-interval (* 7 60)
+  "Time interval, in seconds, between automatic saves of text scale data.
+If set to an integer value, enables periodic autosaving of persisted text scale
+information at the specified interval.
+If set to nil, disables timer-based autosaving entirely."
+  :type '(choice (const :tag "Disabled" nil)
+                 (integer :tag "Seconds"))
+  :group 'persist-text-scale)
 
-When nil, text-scale will always be restored."
-  :type 'boolean
+(defcustom persist-text-scale-buffer-category-function nil
+  "Optional function to customize buffer category classification.
+If non-nil, this function overrides the `persist-text-scale--buffer-category'
+function and is invoked to determine the buffer category identifier used for
+text scale grouping. It must return a string or symbol representing the buffer
+category, or nil to fall back to the default classification."
+  :type '(choice (const :tag "None" nil) function)
   :group 'persist-text-scale)
 
 (defcustom persist-text-scale-verbose nil
@@ -75,22 +83,13 @@ in debugging or monitoring behavior."
   :type 'boolean
   :group 'persist-text-scale)
 
-(defcustom persist-text-scale-buffer-category-function nil
-  "Optional function to customize buffer category classification.
-If non-nil, this function overrides `persist-text-scale--buffer-category' and is
-invoked to determine the buffer category identifier used for text scale
-grouping. It must return a string or symbol representing the buffer category, or
-nil to fall back to the default classification."
-  :type '(choice (const :tag "None" nil) function)
-  :group 'persist-text-scale)
-
-(defcustom persist-text-scale-autosave-interval (* 7 60)
-  "Time interval, in seconds, between automatic saves of text scale data.
-If set to an integer value, enables periodic autosaving of persisted text scale
-information at the specified interval.
-If set to nil, disables timer-based autosaving entirely."
-  :type '(choice (const :tag "Disabled" nil)
-                 (integer :tag "Seconds"))
+(defcustom persist-text-scale-restore-once t
+  "If non-nil, restore text scale only once per buffer.
+When non-nil, the text scale will be restored either when the buffer is loaded
+or when the buffer is displayed in a window for the first time. Subsequent
+window changes will not trigger additional restoration.
+When nil, text-scale will always be restored. This is useful for debugging."
+  :type 'boolean
   :group 'persist-text-scale)
 
 ;;; Variables
@@ -338,7 +337,8 @@ This function writes the text scale data to the file specified by
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save)
     (remove-hook 'window-buffer-change-functions #'persist-text-scale-restore)
     (remove-hook 'text-scale-mode-hook #'persist-text-scale-persist)
-    (remove-hook 'find-file-hook #'persist-text-scale-restore)))
+    (remove-hook 'find-file-hook #'persist-text-scale-restore)
+    (persist-text-scale-reset)))
 
 (provide 'persist-text-scale)
 ;;; persist-text-scale.el ends here
