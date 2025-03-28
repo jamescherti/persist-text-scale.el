@@ -23,19 +23,19 @@
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; The persist-text-scale Emacs package ensures that all changes made with
-;; text-scale-increase and text-scale-decrease are persisted and restored.
-;;
-;; As a result, even after restarting Emacs, the text size in each buffer will
-;; remain consistent.
+;; The persist-text-scale Emacs package provides persist-text-scale-mode,
+;; which ensures that all adjustments made with text-scale-increase and
+;; text-scale-decrease are persisted and restored across sessions. As a
+;; result, the text size in each buffer remains consistent, even after
+;; restarting Emacs.
 ;;
 ;; (By default, persist-text-scale-mode saves the text scale individually for
 ;; each file-visiting buffer and applies a custom text scale for each special
-;; buffer. This behavior can be customized by setting
-;; persist-text-scale-buffer-category-function to your own function, which
-;; determines how buffers are classified. The function should return a category
-;; identifier based on the buffer's context. Buffers within the same category
-;; will share the same text scale.)
+;; buffer. This behavior can be further customized by assigning a function to
+;; the persist-text-scale-buffer-category-function variable. The function
+;; determines how buffers are categorized by returning a category identifier
+;; based on the buffer's context. Buffers within the same category will share
+;; the same text scale.)
 
 ;;; Code:
 

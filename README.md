@@ -3,20 +3,18 @@
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
 ![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
 
-The **persist-text-scale** Emacs package ensures that all changes made with `text-scale-increase` and `text-scale-decrease` are persisted and restored.
+The **persist-text-scale** Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs.
 
-As a result, even after restarting Emacs, the text size in each buffer will remain consistent.
-
-*(By default, `persist-text-scale-mode` saves the text scale individually for each file-visiting buffer and applies a custom text scale for each special buffer. This behavior can be customized by setting `persist-text-scale-buffer-category-function` to your own function, which determines how buffers are classified. The function should return a category identifier based on the buffer's context. Buffers within the same category will share the same text scale.)*
+*(By default, `persist-text-scale-mode` saves the text scale individually for each file-visiting buffer and applies a custom text scale for each special buffer. This behavior can be further customized by assigning a function to the `persist-text-scale-buffer-category-function` variable. The function determines how buffers are categorized by returning a category identifier based on the buffer's context. Buffers within the same category will share the same text scale.)*
 
 ## Features
 
-- Automatically saves and restores the text scale for every buffer.
-- Periodically autosaves every `persist-text-scale-autosave-interval` seconds. (You can set it to `nil` to disable it, or specify a number of seconds to enable it.)
-- Supports shared text scaling for buffer categories.
-- Provides fully customizable logic for grouping buffers by text scale.
-- Lightweight, efficient, and requires minimal configuration.
-- Allows specifying a function for the `persist-text-scale-buffer-category-function` variable to define custom buffer categorization, enabling groups of buffers to have the same text scale persisted and restored.
+- Automatically persists and restores the text scale for all buffers.
+- Periodically autosaves at intervals defined by `persist-text-scale-autosave-interval` (can be set to `nil` to disable or specified in seconds to enable).
+- Supports unified text scaling across buffer categories.
+- Offers fully customizable logic for categorizing buffers based on text scale.
+- Lightweight and efficient, requiring minimal configuration.
+- Enables custom buffer categorization by specifying a function for the `persist-text-scale-buffer-category-function` variable, ensuring that groups of buffers share the same persisted and restored text scale.
 
 ## Installation
 
