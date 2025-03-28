@@ -18,7 +18,7 @@ The built-in `text-scale-mode` in Emacs is a minor mode that allows users to tem
 - Supports shared text scaling for buffer categories.
 - Provides fully customizable logic for grouping buffers by text scale.
 - Lightweight, efficient, and requires minimal configuration.
-- Allows specifying a function to customize buffer categorization.
+- Allows specifying a function for the `persist-text-scale-buffer-category-function` variable to define custom buffer categorization, enabling groups of buffers to have the same text scale persisted and restored.
 
 ## Installation
 
