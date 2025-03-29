@@ -296,6 +296,10 @@ OBJECT can be a frame or a window."
   ;; or other buffers of the same category)
   (persist-text-scale--restore-all-windows))
 
+(defun persist-text-scale--find-file-hook ()
+  "Triggered by `find-file-hook'."
+  (persist-text-scale-restore))
+
 ;;; Functions
 
 (defun persist-text-scale-persist ()
@@ -430,7 +434,7 @@ This function writes the text scale data to the file specified by
         ;;           #'persist-text-scale--hook-clone-indirect-buffer
         ;;           persist-text-scale-depth-clone-indirect-buffer-hook)
 
-        (add-hook 'find-file-hook #'persist-text-scale-restore
+        (add-hook 'find-file-hook #'persist-text-scale--find-file-hook
                   persist-text-scale-depth-find-file-hook)
 
         ;; Hook: when text scale is changed
@@ -448,7 +452,7 @@ This function writes the text scale data to the file specified by
 
     (remove-hook 'text-scale-mode-hook #'persist-text-scale--text-scale-mode-hook)
 
-    (remove-hook 'find-file-hook #'persist-text-scale-restore)
+    (remove-hook 'find-file-hook #'persist-text-scale--find-file-hook)
     (persist-text-scale-reset)))
 
 (provide 'persist-text-scale)
