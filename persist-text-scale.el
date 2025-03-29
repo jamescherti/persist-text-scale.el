@@ -148,9 +148,11 @@ Returns a unique identifier string based."
         (cond
          ;; Special buffers
          ((and (not file-name)
-               (or (string-prefix-p "*" buffer-name)
+               (or (and (string-prefix-p "*" buffer-name)
+                        (string-suffix-p "*" buffer-name))
                    (string-prefix-p " " buffer-name)
-                   (derived-mode-p 'special-mode)))
+                   (derived-mode-p 'special-mode)
+                   (minibufferp (current-buffer))))
           (setq result (concat "special:" buffer-name)))
 
          (file-name
@@ -173,9 +175,7 @@ Returns a unique identifier string based."
 Returns nil when the buffer category is nil."
   (when-let* ((category (persist-text-scale--buffer-category)))
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
-                        ;; TODO
-                        ;; persist-text-scale--last-text-scale-amount
-                        )))
+                        persist-text-scale--last-text-scale-amount)))
       (cond
        ((integerp cat-data)
         cat-data)
@@ -186,7 +186,7 @@ Returns nil when the buffer category is nil."
        (t
         nil)))))
 
-(defun persist-text-scale-persist (&rest _)
+(defun persist-text-scale-persist ()
   "Save the current text scale for the current buffer.
 If the buffer's identifier already has a stored text scale, it updates the
 existing value. Otherwise, it adds a new cons cell (category . scale) to the
@@ -231,7 +231,7 @@ alist."
             (setq persist-text-scale--last-text-scale-amount
                   text-scale-mode-amount))))))))
 
-(defun persist-text-scale-restore (&rest _)
+(defun persist-text-scale-restore ()
   "Restore the text scale for the current buffer."
   (when (or (not persist-text-scale-restore-once)
             (not persist-text-scale--amount))
@@ -259,13 +259,13 @@ alist."
   "Restore the text scale on all windows in the current frame."
   (walk-windows
    (lambda (window)
-     (let ((buffer (window-buffer window)))
-       (with-current-buffer buffer
-         (persist-text-scale-restore))))
+     (with-selected-window window
+       (let ((buffer (window-buffer window)))
+         (with-current-buffer buffer
+           (persist-text-scale-restore)))))
 
    ;; Exclude the mini buffer
-   ;; TODO: Include?
-   nil
+   t
 
    ;; nil = current frame only | t = all frames
    nil))
