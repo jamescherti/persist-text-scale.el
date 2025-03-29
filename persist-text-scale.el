@@ -95,6 +95,7 @@ window changes will not trigger additional restoration."
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
 (defvar persist-text-scale-depth-find-file-hook -99)
+(defvar persist-text-scale-depth-clone-indirect-buffer-hook 99)
 (defvar persist-text-scale-depth-text-scale-mode 99)
 
 (defvar persist-text-scale--data nil
@@ -338,6 +339,8 @@ This function writes the text scale data to the file specified by
         (add-hook 'window-buffer-change-functions
                   #'persist-text-scale--window-buffer-change-functions
                   persist-text-scale-depth-window-buffer-change-functions)
+        (add-hook 'clone-indirect-buffer-hook #'persist-text-scale-restore
+                  persist-text-scale-depth-clone-indirect-buffer-hook)
         (add-hook 'find-file-hook #'persist-text-scale-restore
                   persist-text-scale-depth-find-file-hook)
         ;; Hook: when text scale is changed
