@@ -159,11 +159,6 @@ Returns a unique identifier string based."
              (file-name (buffer-file-name base-buffer))
              (buffer-name (buffer-name base-buffer)))
         (cond
-         ((not base-buffer)
-          ;; Ignore indirect buffers because they inherit text-scale-mode-amount
-          ;; from the base buffer
-          (setq result nil))
-
          ;; Special buffers
          ((and (not file-name)
                (or (and (string-prefix-p "*" buffer-name)
