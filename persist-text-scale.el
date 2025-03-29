@@ -287,9 +287,9 @@ OBJECT can be a frame or a window."
   ;; or other buffers of the same category)
   (persist-text-scale--restore-all-windows))
 
-(defun persist-text-scale--find-file-hook ()
-  "Triggered by `find-file-hook'."
-  (persist-text-scale-restore))
+;; (defun persist-text-scale--find-file-hook ()
+;;   "Triggered by `find-file-hook'."
+;;   (persist-text-scale-restore))
 
 ;;; Functions
 
