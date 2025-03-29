@@ -274,25 +274,50 @@ alist."
         (setq persist-text-scale--restored-amount amount)))))
 
 (defun persist-text-scale--restore-all-windows ()
-  "Restore the text scale on all windows in the current frame."
-  (let ((current-window (selected-window)))
+  "Restore the text scale on all windows."
+  (let ((current-window (selected-window))
+        (current-buffer (current-buffer)))
+    ;; Current window/buffer
     (persist-text-scale-restore)
+
+    ;; Other windows/buffers
     (walk-windows
      (lambda (window)
        (unless (eq window current-window)
          (with-selected-window window
-           (let ((buffer (window-buffer window)))
-             (with-current-buffer buffer
-               (persist-text-scale-restore))))))
+           (let ((buffer (window-buffer)))
+             (unless (eq current-buffer buffer)
+               (with-current-buffer buffer
+                 (persist-text-scale-restore)))))))
      ;; Minibuffer
      t
      ;; All frames
      t)))
 
-(defun persist-text-scale--hook-restore-all-windows (&optional _)
+(defun persist-text-scale--hook-restore-all-windows (&optional object)
   "Function called by `window-buffer-change-functions'.
 OBJECT can be a frame or a window."
-  (persist-text-scale--restore-all-windows))
+  (when (bound-and-true-p persist-text-scale-mode)
+    (let ((frame (if (frame-live-p object)
+                     object
+                   (selected-frame)))
+          (window (cond ((not object)
+                         nil)
+
+                        ((frame-live-p object)
+                         (with-selected-frame object
+                           (selected-window)))
+
+                        ((window-live-p object)
+                         object)
+
+                        (t
+                         (selected-window)))))
+
+      (when window
+        (with-selected-frame frame
+          (with-selected-window window)
+          (persist-text-scale--restore-all-windows))))))
 
 (defun persist-text-scale-reset ()
   "Reset the text scale for all buffer categories."
