@@ -125,15 +125,14 @@ interactive text scale change and is used internally to support restoration.")
   "Set or cancel an invocation of `persist-text-scale-autosave' on a timer.
 If `persist-text-scale-mode' is enabled, set the timer, otherwise cancel the
 timer."
-  (when (boundp 'persist-text-scale-autosave-interval)
-    (if (and (bound-and-true-p persist-text-scale-mode)
-             persist-text-scale-autosave-interval
-             (null persist-text-scale--timer))
-        (setq persist-text-scale--timer
-              (run-with-timer persist-text-scale-autosave-interval
-                              persist-text-scale-autosave-interval
-                              #'persist-text-scale-save))
-      (persist-text-scale--cancel-timer))))
+  (persist-text-scale--cancel-timer)
+  (if (and (bound-and-true-p persist-text-scale-mode)
+           (bound-and-true-p persist-text-scale-autosave-interval)
+           (null persist-text-scale--timer))
+      (setq persist-text-scale--timer
+            (run-with-timer persist-text-scale-autosave-interval
+                            persist-text-scale-autosave-interval
+                            #'persist-text-scale-save))))
 
 (defun persist-text-scale--buffer-category ()
   "Generate a unique name for the current buffer.
