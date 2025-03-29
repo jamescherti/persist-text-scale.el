@@ -149,27 +149,28 @@ Returns a unique identifier string based."
       (setq result (funcall persist-text-scale-buffer-category-function)))
 
     (unless result
-      (let ((file-name (buffer-file-name (buffer-base-buffer)))
-            (buffer-name (buffer-name)))
-        (cond
-         ;; Special buffers
-         ((and (not file-name)
-               (or (and (string-prefix-p "*" buffer-name)
-                        (string-suffix-p "*" buffer-name))
-                   (string-prefix-p " " buffer-name)
-                   (derived-mode-p 'special-mode)
-                   (minibufferp (current-buffer))))
-          (setq result (concat "special:" buffer-name)))
+      (let* ((base-buffer (or (buffer-base-buffer) (current-buffer)))
+             (file-name (buffer-file-name base-buffer))
+             (buffer-name (buffer-name base-buffer)))
+        (with-current-buffer base-buffer
+          (cond
+           ;; Special buffers
+           ((and (not file-name)
+                 (or (and (string-prefix-p "*" buffer-name)
+                          (string-suffix-p "*" buffer-name))
+                     (string-prefix-p " " buffer-name)
+                     (derived-mode-p 'special-mode)
+                     (minibufferp (current-buffer))))
+            (setq result (concat "special:" buffer-name)))
 
-         (file-name
-          (setq result (format "file:%s" (file-truename file-name))))
+           (file-name
+            (setq result (format "file:%s" (file-truename file-name))))
 
-         ((boundp 'major-mode)
-          (let ((major-mode-symbol (symbol-name major-mode)))
-            (setq result (concat "major-mode:" major-mode-symbol))))
-
-         (t
-          (setq result "unknown")))))
+           ((boundp 'major-mode)
+            (let ((major-mode-symbol (symbol-name major-mode)))
+              (setq result (concat "major-mode:" major-mode-symbol))))
+           (t
+            (setq result "unknown"))))))
 
     ;; Return result
     (if (eq result :ignore)
@@ -181,7 +182,9 @@ Returns a unique identifier string based."
 Returns nil when the buffer category is nil."
   (when-let* ((category (persist-text-scale--buffer-category)))
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
-                        persist-text-scale--last-text-scale-amount)))
+                        ;; TODO: Only for non-special buffers
+                        ;; persist-text-scale--last-text-scale-amount
+                        )))
       (cond
        ((integerp cat-data)
         cat-data)
