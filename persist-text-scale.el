@@ -155,27 +155,33 @@ Returns a unique identifier string based."
       (setq result (funcall persist-text-scale-buffer-category-function)))
 
     (unless result
-      (let* ((base-buffer (or (buffer-base-buffer) (current-buffer)))
-             (file-name (buffer-file-name base-buffer))
-             (buffer-name (buffer-name base-buffer)))
-        (cond
-         ;; Special buffers
-         ((and (not file-name)
-               (or (and (string-prefix-p "*" buffer-name)
-                        (string-suffix-p "*" buffer-name))
-                   (string-prefix-p " " buffer-name)
-                   (derived-mode-p 'special-mode)
-                   (minibufferp (current-buffer))))
-          (setq result (concat "special:" buffer-name)))
+      (setq result (let* ((base-buffer (buffer-base-buffer))
+                          (file-name (buffer-file-name base-buffer))
+                          (buffer-name (buffer-name)))
+                     (cond
+                      ;; Special buffers
+                      ((and (not file-name)
+                            (or (and (string-prefix-p "*" buffer-name)
+                                     (string-suffix-p "*" buffer-name))
+                                (string-prefix-p " " buffer-name)
+                                (derived-mode-p 'special-mode)
+                                (minibufferp (current-buffer))))
+                       (format "special:%s" buffer-name))
 
-         (file-name
-          (setq result (format "file:%s" (file-truename file-name))))
+                      ;; ((and base-buffer file-name)
+                      ;;  ;; File visiting indirect buffers
+                      ;;  (format "ib-file:%s" (file-truename file-name)))
 
-         ((boundp 'major-mode)
-          (let ((major-mode-symbol (symbol-name major-mode)))
-            (setq result (concat "major-mode:" major-mode-symbol))))
-         (t
-          (setq result "unknown")))))
+                      (file-name
+                       ;; File visiting buffers
+                       (format "file:%s" (file-truename file-name)))
+
+                      ((and (boundp 'major-mode) major-mode)
+                       (let ((major-mode-symbol (symbol-name major-mode)))
+                         (format "major-mode:%s" major-mode-symbol)))
+
+                      (t
+                       (format "other:%s" (buffer-name)))))))
 
     ;; Return result
     (if (eq result :ignore)
@@ -294,6 +300,20 @@ alist."
      ;; All frames
      t)))
 
+(defun persist-text-scale--hook-clone-indirect-buffer ()
+  "Function called by `clone-indirect-buffer-hook'."
+  ;; Set the text scale to the text scale of the base buffer
+  ;; (let ((base-buffer (buffer-base-buffer)))
+  ;;   (when base-buffer
+  ;;     (when-let* ((text-scale-amount
+  ;;                  (with-current-buffer base-buffer
+  ;;                    (and (bound-and-true-p text-scale-mode-amount)
+  ;;                         text-scale-mode-amount))))
+  ;;       (text-scale-set text-scale-amount))))
+
+  ;; Restore text scale on all windows
+  (persist-text-scale--hook-restore-all-windows))
+
 (defun persist-text-scale--hook-restore-all-windows (&optional object)
   "Function called by `window-buffer-change-functions'.
 OBJECT can be a frame or a window."
@@ -376,7 +396,7 @@ This function writes the text scale data to the file specified by
                   #'persist-text-scale--hook-restore-all-windows
                   persist-text-scale-depth-window-buffer-change-functions)
         (add-hook 'clone-indirect-buffer-hook
-                  #'persist-text-scale--hook-restore-all-windows
+                  #'persist-text-scale--hook-clone-indirect-buffer
                   persist-text-scale-depth-clone-indirect-buffer-hook)
         (add-hook 'find-file-hook #'persist-text-scale-restore
                   persist-text-scale-depth-find-file-hook)
@@ -388,7 +408,7 @@ This function writes the text scale data to the file specified by
     (remove-hook 'window-buffer-change-functions
                  #'persist-text-scale--hook-restore-all-windows)
     (remove-hook 'clone-indirect-buffer-hook
-                 #'persist-text-scale--hook-restore-all-windows)
+                 #'persist-text-scale--hook-clone-indirect-buffer)
     (remove-hook 'text-scale-mode-hook #'persist-text-scale-persist)
     (remove-hook 'find-file-hook #'persist-text-scale-restore)
     (persist-text-scale-reset)))
