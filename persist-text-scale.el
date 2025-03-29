@@ -97,7 +97,7 @@ When unsure, leave this value as nil."
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
 (defvar persist-text-scale-depth-find-file-hook -99)
-(defvar persist-text-scale-depth-clone-indirect-buffer-hook -99)
+;; (defvar persist-text-scale-depth-clone-indirect-buffer-hook -99)
 (defvar persist-text-scale-depth-text-scale-mode 99)
 
 ;; Internal variables
@@ -150,7 +150,7 @@ timer."
 (defun persist-text-scale--buffer-category ()
   "Generate a unique name for the current buffer.
 Returns a unique identifier string based."
-  (let ((result nil))
+  (let (result)
     (when persist-text-scale-buffer-category-function
       (setq result (funcall persist-text-scale-buffer-category-function)))
 
@@ -193,11 +193,12 @@ Returns a unique identifier string based."
 
                       ;; Other
                       (t
-                       (format "o:%s" buffer-name)))))
-      ;; Return result
-      (if (eq result :ignore)
-          nil
-        result))))
+                       (format "o:%s" buffer-name))))))
+
+    ;; Return result
+    (if (eq result :ignore)
+        nil
+      result)))
 
 (defun persist-text-scale-get-amount ()
   "Retrieve the text scale factor for the current buffer category.
