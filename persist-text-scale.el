@@ -192,10 +192,14 @@ Returns nil when the buffer category is nil."
 If the buffer's identifier already has a stored text scale, it updates the
 existing value. Otherwise, it adds a new cons cell (mode . scale) to the
 alist."
-  (when (and (bound-and-true-p persist-text-scale-mode)
-             (bound-and-true-p text-scale-mode)
-             (bound-and-true-p text-scale-mode-amount))
+  (when (bound-and-true-p persist-text-scale-mode)
     (cond
+     ((not (bound-and-true-p text-scale-mode-amount))
+      (when persist-text-scale-verbose
+        (message
+         "[persist-text-scale] IGNORE (text-scale-mode-disabled): Persist '%s': %s"
+         (buffer-name) text-scale-mode-amount)))
+
      ((and (bound-and-true-p persist-text-scale--amount)
            (= text-scale-mode-amount persist-text-scale--amount))
       (when persist-text-scale-verbose
@@ -216,6 +220,8 @@ alist."
           (if cons-value
               (setcdr cons-value new-data)
             (push (cons buffer-category new-data) persist-text-scale--data))
+
+          (setq persist-text-scale--amount text-scale-mode-amount)
 
           ;; TODO: Move to a separate function
           (setq persist-text-scale--last-text-scale-amount
@@ -338,7 +344,7 @@ This function writes the text scale data to the file specified by
 ;;; Mode
 
 ;;;###autoload
-(define-minor-mode persist-text-scale-mode
+((define-minor-mode persist-text-scale-mode
   "Toggle `persist-text-scale-mode'."
   :global t
   :lighter " PTScale"
