@@ -208,13 +208,16 @@ alist."
      (t
       (let ((buffer-category (persist-text-scale--buffer-category)))
         (if (not buffer-category)
+            ;; No category
             (when persist-text-scale-verbose
               (message
                "[persist-text-scale] IGNORE (:ignore category): Persist '%s': %s: %s"
                (buffer-name) buffer-category text-scale-mode-amount))
+          ;; Category found
           (when persist-text-scale-verbose
             (message "[persist-text-scale] Persist '%s': %s: %s"
                      (buffer-name) buffer-category text-scale-mode-amount))
+
           (let ((cons-value (when (and persist-text-scale--data
                                        buffer-category)
                               (assoc buffer-category
@@ -236,24 +239,23 @@ alist."
   (when (or (not persist-text-scale-restore-once)
             (not persist-text-scale--amount))
     (when-let* ((amount (persist-text-scale-get-amount)))
-      (when amount
-        (setq persist-text-scale--amount amount)
-        (if (and (bound-and-true-p text-scale-mode-amount)
-                 (= amount text-scale-mode-amount))
-            ;; Ignore
-            (when persist-text-scale-verbose
-              (message (concat "[persist-text-scale] IGNORED "
-                               "(up-to-date): Restore '%s': %s: %s")
-                       (buffer-name)
-                       (persist-text-scale--buffer-category)
-                       amount))
-          ;; Restore
+      (setq persist-text-scale--amount amount)
+      (if (and (bound-and-true-p text-scale-mode-amount)
+               (= amount text-scale-mode-amount))
+          ;; Ignore
           (when persist-text-scale-verbose
-            (message "[persist-text-scale] Restore '%s': %s: %s"
+            (message (concat "[persist-text-scale] IGNORED "
+                             "(up-to-date): Restore '%s': %s: %s")
                      (buffer-name)
                      (persist-text-scale--buffer-category)
                      amount))
-          (text-scale-set amount))))))
+        ;; Restore
+        (when persist-text-scale-verbose
+          (message "[persist-text-scale] Restore '%s': %s: %s"
+                   (buffer-name)
+                   (persist-text-scale--buffer-category)
+                   amount))
+        (text-scale-set amount)))))
 
 (defun persist-text-scale--restore-all-windows ()
   "Restore the text scale on all windows in the current frame."
@@ -369,7 +371,8 @@ This function writes the text scale data to the file specified by
                   persist-text-scale-depth-text-scale-mode))
     (persist-text-scale--cancel-timer)
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save)
-    (remove-hook 'window-buffer-change-functions #'persist-text-scale-restore)
+    (remove-hook 'window-buffer-change-functions
+                 #'persist-text-scale--window-buffer-change-functions)
     (remove-hook 'text-scale-mode-hook #'persist-text-scale-persist)
     (remove-hook 'find-file-hook #'persist-text-scale-restore)
     (persist-text-scale-reset)))
