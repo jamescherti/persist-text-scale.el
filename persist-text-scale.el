@@ -6,7 +6,7 @@
 ;; Version: 0.9.9
 ;; URL: https://github.com/jamescherti/persist-text-scale.el
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "26.1"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -217,62 +217,79 @@ alist."
           (setq persist-text-scale--last-text-scale-amount
                 text-scale-mode-amount)))))))
 
-(defun persist-text-scale-restore (&optional object &rest _)
-  "Restore the text scale for the current buffer .
-OBJECT is a window or a frame.
-If a text scale value is found, it sets the text scale using `text-scale-set'."
+(defun persist-text-scale-restore (&rest _)
+  "Restore the text scale for the current buffer."
+  (when (or (not persist-text-scale-restore-once)
+            (not persist-text-scale--amount))
+    (when-let* ((amount (persist-text-scale-get-amount)))
+      (if (and (bound-and-true-p text-scale-mode-amount)
+               (= amount text-scale-mode-amount))
+          ;; Ignore
+          (when persist-text-scale-verbose
+            (message (concat "[persist-text-scale] IGNORED "
+                             "(up-to-date): Restore '%s': %s: %s")
+                     (buffer-name)
+                     (persist-text-scale--buffer-category)
+                     amount))
+        ;; Restore
+        (when persist-text-scale-verbose
+          (message "[persist-text-scale] Restore '%s': %s: %s"
+                   (buffer-name)
+                   (persist-text-scale--buffer-category)
+                   amount))
+        (text-scale-set amount)
+        (setq persist-text-scale--amount amount)))))
+
+(defun persist-text-scale--restore-all-windows ()
+  "Restore the text scale on all windows in the current frame."
+  (walk-windows
+   (lambda (window)
+     (let ((buffer (window-buffer window)))
+       (with-current-buffer buffer
+         (persist-text-scale-restore))))
+
+   ;; Exclude the mini buffer
+   ;; TODO: Include?
+   nil
+
+   ;; nil = current frame only | t = all frames
+   nil))
+
+(defun persist-text-scale--window-buffer-change-functions (&optional object)
+  "Function called by `window-buffer-change-functions'.
+OBJECT can be a frame or a window."
   (when (bound-and-true-p persist-text-scale-mode)
-    (let ((frame (if (frame-live-p object)
+    (let (;; A frame is passed as an argument when functions specified by the
+          ;; default value are called for each frame, but only if at least one
+          ;; window on that frame has been added, deleted, or had its buffer
+          ;; changed since the last redisplay.
+          ;; See `window-buffer-change-functions'
+          (frame (if (frame-live-p object)
                      object
                    (selected-frame)))
-          (window (cond ((not object)
-                         nil)
+          ;; A window is passed as an argument when functions specified
+          ;; buffer-locally are called for each window displaying the
+          ;; corresponding buffer. This occurs only if the window has been added
+          ;; or its buffer has changed since the last redisplay.
+          ;; See `window-buffer-change-functions'
+          (window (cond
+                   ((frame-live-p object)
+                    (with-selected-frame object
+                      (selected-window)))
 
-                        ((frame-live-p object)
-                         (with-selected-frame object
-                           (selected-window)))
+                   ((window-live-p object)
+                    object)
 
-                        ((window-live-p object)
-                         object)
+                   (t
+                    (selected-window)))))
 
-                        (t
-                         (selected-window)))))
-
-      (when (and window (window-live-p window))
-        (with-selected-frame frame
+      (with-selected-frame frame
+        (with-selected-window window
           ;; Iterate over all windows to ensure none are missed (e.g., consult
-          ;; preview windows that don't trigger `window-buffer-change-functions`
-          ;; or other hooks used by `persist-text-scale`).
-          (walk-windows
-           (lambda (window)
-             (with-selected-window window
-               (let ((buffer (window-buffer)))
-                 (let ((amount (persist-text-scale-get-amount)))
-                   (when (and amount
-                              (or (not persist-text-scale-restore-once)
-                                  (and persist-text-scale-restore-once
-                                       (not persist-text-scale--amount))))
-
-                     (if (and (bound-and-true-p text-scale-mode-amount)
-                              (= amount text-scale-mode-amount))
-                         (when persist-text-scale-verbose
-                           (message
-                            (concat "[persist-text-scale] IGNORED "
-                                    "(up-to-date): Restore '%s': %s: %s")
-                            (buffer-name buffer)
-                            (persist-text-scale--buffer-category)
-                            amount))
-                       (when persist-text-scale-verbose
-                         (message "[persist-text-scale] Restore '%s': %s: %s"
-                                  (buffer-name buffer)
-                                  (persist-text-scale--buffer-category)
-                                  amount))
-                       (setq persist-text-scale--amount amount)
-                       (text-scale-set amount)))))))
-           ;; Do not exclude the mini buffer
-           nil
-           ;; nil = current frame only | t = all frames
-           nil))))))
+          ;; preview windows that don't trigger
+          ;; `window-buffer-change-functions` or other hooks used by
+          ;; `persist-text-scale`).
+          (persist-text-scale--restore-all-windows))))))
 
 (defun persist-text-scale-reset ()
   "Reset the text scale for all buffer categories."
@@ -327,7 +344,8 @@ This function writes the text scale data to the file specified by
         (persist-text-scale-load)
         (persist-text-scale--manage-timer)
         (add-hook 'kill-emacs-hook #'persist-text-scale-save)
-        (add-hook 'window-buffer-change-functions #'persist-text-scale-restore
+        (add-hook 'window-buffer-change-functions
+                  #'persist-text-scale--window-buffer-change-functions
                   persist-text-scale-depth-window-buffer-change-functions)
         (add-hook 'find-file-hook #'persist-text-scale-restore
                   persist-text-scale-depth-find-file-hook)
