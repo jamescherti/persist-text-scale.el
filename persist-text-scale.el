@@ -159,6 +159,17 @@ Returns a unique identifier string based."
                           (file-name (buffer-file-name base-buffer))
                           (buffer-name (buffer-name)))
                      (cond
+                      ;; Ignore old buffers
+                      ((string-prefix-p " *Old buffer" buffer-name)
+
+                      ;; File visiting indirect buffers
+                      ((and base-buffer file-name)
+                       (format "fib:%s" (file-truename file-name)))
+
+                      ;; File visiting buffers
+                      (file-name
+                       (format "f:%s" (file-truename file-name)))
+
                       ;; Special buffers
                       ((and (not file-name)
                             (or (and (string-prefix-p "*" buffer-name)
@@ -166,22 +177,22 @@ Returns a unique identifier string based."
                                 (string-prefix-p " " buffer-name)
                                 (derived-mode-p 'special-mode)
                                 (minibufferp (current-buffer))))
-                       (format "special:%s" buffer-name))
+                       (format "s%s:%s"
+                               (if base-buffer "ib" "")
+                               buffer-name))
 
-                      ;; ((and base-buffer file-name)
-                      ;;  ;; File visiting indirect buffers
-                      ;;  (format "ib-file:%s" (file-truename file-name)))
+                      ;; Indirect buffers
+                      (base-buffer
+                       (format "ib:%s" buffer-name))
 
-                      (file-name
-                       ;; File visiting buffers
-                       (format "file:%s" (file-truename file-name)))
-
+                      ;; Major-modes
                       ((and (boundp 'major-mode) major-mode)
                        (let ((major-mode-symbol (symbol-name major-mode)))
-                         (format "major-mode:%s" major-mode-symbol)))
+                         (format "mm:%s" major-mode-symbol)))
 
+                      ;; Other
                       (t
-                       (format "other:%s" (buffer-name)))))))
+                       (format "o:%s" buffer-name))))))
 
     ;; Return result
     (if (eq result :ignore)
