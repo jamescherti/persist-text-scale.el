@@ -97,7 +97,7 @@ When unsure, leave this value as nil."
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
 (defvar persist-text-scale-depth-find-file-hook -99)
-;; (defvar persist-text-scale-depth-clone-indirect-buffer-hook -99)
+;; (defvar persist-text-scale-depth-clone-indirect-buffer-hook 99)
 (defvar persist-text-scale-depth-text-scale-mode 99)
 
 ;; Internal variables
@@ -241,9 +241,13 @@ Returns nil when the buffer category is nil."
 
 ;; (defun persist-text-scale--hook-clone-indirect-buffer ()
 ;;   "Function called by `clone-indirect-buffer-hook'."
-;;   ;; (setq persist-text-scale--persisted-amount nil)
-;;   ;; (setq persist-text-scale--restored-amount nil)
-;;   ;;
+;;   ;; The text scale in indirect buffers is relative to the base buffer. For
+;;   ;; example, if the base buffer's text size is 5, an indirect buffer with a
+;;   ;; scale of 0 will have the same text size as the base buffer (i.e., 5).
+;;   ;; (when (bound-and-true-p text-scale-mode-amount)
+;;   ;;   (setq persist-text-scale--persisted-amount text-scale-mode-amount)
+;;   ;;   (setq persist-text-scale--restored-amount text-scale-mode-amount))
+;;
 ;;   ;; (let ((base-buffer (buffer-base-buffer)))
 ;;   ;;   (when base-buffer
 ;;   ;;     (when-let* ((base-buffer-text-scale-amount
@@ -257,13 +261,15 @@ Returns nil when the buffer category is nil."
 ;;   ;; (persist-text-scale-persist)
 ;;   ;; (persist-text-scale-restore)
 ;;
-;;   ;; Restore text scale on all windows
 ;;   ;; (persist-text-scale--window-buffer-change-functions)
 ;;   )
+
+(defvar-local persist-text-scale--indirect-buffer-initialized nil)
 
 (defun persist-text-scale--window-buffer-change-functions (&optional object)
   "Function called by `window-buffer-change-functions'.
 OBJECT can be a frame or a window."
+  ;; ind buffers
   (when (bound-and-true-p persist-text-scale-mode)
     (let ((frame (if (frame-live-p object)
                      object
@@ -286,6 +292,17 @@ OBJECT can be a frame or a window."
           (with-selected-window window)
           (when-let* ((buffer (window-buffer)))
             (with-current-buffer buffer
+              ;; Indirect buffers
+              (when (and (buffer-base-buffer)
+                         (not persist-text-scale--indirect-buffer-initialized))
+                (when (bound-and-true-p text-scale-mode-amount)
+                  (setq persist-text-scale--restored-amount text-scale-mode-amount)
+                  (setq persist-text-scale--persisted-amount nil)
+                  (persist-text-scale-persist)
+                  (setq persist-text-scale--persisted-amount text-scale-mode-amount))
+                (setq persist-text-scale--indirect-buffer-initialized t))
+
+              ;; Restore all windows
               (persist-text-scale--restore-all-windows))))))))
 
 (defun persist-text-scale--text-scale-mode-hook ()
