@@ -87,7 +87,9 @@ in debugging or monitoring behavior."
   "If non-nil, restore text scale only once per buffer.
 When non-nil, the text scale will be restored either when the buffer is loaded
 or when the buffer is displayed in a window for the first time. Subsequent
-window changes will not trigger additional restoration."
+window changes will not trigger additional restoration.
+
+When unsure, leave this value as nil."
   :type 'boolean
   :group 'persist-text-scale)
 
@@ -98,6 +100,8 @@ window changes will not trigger additional restoration."
 (defvar persist-text-scale-depth-clone-indirect-buffer-hook 99)
 (defvar persist-text-scale-depth-text-scale-mode 99)
 
+;; Internal variables
+
 (defvar persist-text-scale--data nil
   "Alist mapping buffer identifiers to their corresponding text scale amount.
 Each entry associates either a file path or a buffer category name with the
@@ -107,8 +111,6 @@ numeric value of the text scale applied to that buffer or group.")
   "Most recent text scale amount selected by the user.
 This value reflects the numeric text scale adjustment applied in the last
 interactive text scale change and is used internally to support restoration.")
-
-;; Internal variables
 
 (defvar persist-text-scale--timer nil)
 (defvar-local persist-text-scale--restored-amount nil
