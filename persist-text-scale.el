@@ -83,12 +83,11 @@ in debugging or monitoring behavior."
   :type 'boolean
   :group 'persist-text-scale)
 
-(defcustom persist-text-scale-restore-once t
+(defcustom persist-text-scale-restore-once nil
   "If non-nil, restore text scale only once per buffer.
 When non-nil, the text scale will be restored either when the buffer is loaded
 or when the buffer is displayed in a window for the first time. Subsequent
-window changes will not trigger additional restoration.
-When nil, text-scale will always be restored. This is useful for debugging."
+window changes will not trigger additional restoration."
   :type 'boolean
   :group 'persist-text-scale)
 
@@ -268,48 +267,15 @@ alist."
        (let ((buffer (window-buffer window)))
          (with-current-buffer buffer
            (persist-text-scale-restore)))))
-
-   ;; Exclude the mini buffer
+   ;; Minibuffer
    t
+   ;; All frames
+   t))
 
-   ;; nil = current frame only | t = all frames
-   nil))
-
-(defun persist-text-scale--window-buffer-change-functions (&optional object)
+(defun persist-text-scale--window-buffer-change-functions (&optional _)
   "Function called by `window-buffer-change-functions'.
 OBJECT can be a frame or a window."
-  (when (bound-and-true-p persist-text-scale-mode)
-    (let (;; A frame is passed as an argument when functions specified by the
-          ;; default value are called for each frame, but only if at least one
-          ;; window on that frame has been added, deleted, or had its buffer
-          ;; changed since the last redisplay.
-          ;; See `window-buffer-change-functions'
-          (frame (if (frame-live-p object)
-                     object
-                   (selected-frame)))
-          ;; A window is passed as an argument when functions specified
-          ;; buffer-locally are called for each window displaying the
-          ;; corresponding buffer. This occurs only if the window has been added
-          ;; or its buffer has changed since the last redisplay.
-          ;; See `window-buffer-change-functions'
-          (window (cond
-                   ((frame-live-p object)
-                    (with-selected-frame object
-                      (selected-window)))
-
-                   ((window-live-p object)
-                    object)
-
-                   (t
-                    (selected-window)))))
-
-      (with-selected-frame frame
-        (with-selected-window window
-          ;; Iterate over all windows to ensure none are missed (e.g., consult
-          ;; preview windows that don't trigger
-          ;; `window-buffer-change-functions` or other hooks used by
-          ;; `persist-text-scale`).
-          (persist-text-scale--restore-all-windows))))))
+  (persist-text-scale--restore-all-windows))
 
 (defun persist-text-scale-reset ()
   "Reset the text scale for all buffer categories."
