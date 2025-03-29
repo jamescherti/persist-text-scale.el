@@ -193,9 +193,11 @@ If the buffer's identifier already has a stored text scale, it updates the
 existing value. Otherwise, it adds a new cons cell (mode . scale) to the
 alist."
   (when (and (bound-and-true-p persist-text-scale-mode)
+             (bound-and-true-p text-scale-mode)
              (bound-and-true-p text-scale-mode-amount))
     (cond
-     ((eq text-scale-mode-amount persist-text-scale--amount)
+     ((and (bound-and-true-p persist-text-scale--amount)
+           (= text-scale-mode-amount persist-text-scale--amount))
       (when persist-text-scale-verbose
         (message "[persist-text-scale] IGNORE (up-to-date): Persist '%s': %s"
                  (buffer-name) text-scale-mode-amount)))
@@ -222,6 +224,7 @@ alist."
   (when (or (not persist-text-scale-restore-once)
             (not persist-text-scale--amount))
     (when-let* ((amount (persist-text-scale-get-amount)))
+      (setq persist-text-scale--amount amount)
       (if (and (bound-and-true-p text-scale-mode-amount)
                (= amount text-scale-mode-amount))
           ;; Ignore
@@ -237,8 +240,7 @@ alist."
                    (buffer-name)
                    (persist-text-scale--buffer-category)
                    amount))
-        (text-scale-set amount)
-        (setq persist-text-scale--amount amount)))))
+        (text-scale-set amount)))))
 
 (defun persist-text-scale--restore-all-windows ()
   "Restore the text scale on all windows in the current frame."
