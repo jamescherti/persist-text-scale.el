@@ -207,15 +207,17 @@ alist."
         (when persist-text-scale-verbose
           (message "[persist-text-scale] Persist '%s': %s: %s"
                    (buffer-name) buffer-category text-scale-mode-amount))
-        (let ((cons-value (and persist-text-scale--data
-                               (when buffer-category
-                                 (assoc buffer-category
-                                        persist-text-scale--data)))))
-          (let ((new-data (list (cons 'text-scale-amount text-scale-mode-amount)
-                                (cons 'mtime (current-time)))))
-            (if cons-value
-                (setcdr cons-value new-data)
-              (push (cons buffer-category new-data) persist-text-scale--data)))
+        (let ((cons-value (when (and persist-text-scale--data
+                                     buffer-category)
+                            (assoc buffer-category
+                                   persist-text-scale--data)))
+              (new-data (list (cons 'text-scale-amount text-scale-mode-amount)
+                              (cons 'mtime (current-time)))))
+          (if cons-value
+              (setcdr cons-value new-data)
+            (push (cons buffer-category new-data) persist-text-scale--data))
+
+          ;; TODO: Move to a separate function
           (setq persist-text-scale--last-text-scale-amount
                 text-scale-mode-amount)))))))
 
