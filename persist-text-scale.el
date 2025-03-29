@@ -178,15 +178,12 @@ Returns nil when the buffer category is nil."
                         )))
       (cond
        ((integerp cat-data)
-        (message "RETURN:%s" cat-data)
         cat-data)
 
        ((listp cat-data)
-        (message "RETURN: %s" (cdr (assoc 'text-scale-amount cat-data)))
         (cdr (assoc 'text-scale-amount cat-data)))
 
        (t
-        (message "RETURN:%s" nil)
         nil)))))
 
 (defun persist-text-scale-persist (&rest _)
