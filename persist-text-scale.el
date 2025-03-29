@@ -311,19 +311,28 @@ alist."
      ;; All frames
      t)))
 
-(defun persist-text-scale--hook-clone-indirect-buffer ()
-  "Function called by `clone-indirect-buffer-hook'."
-  ;; Set the text scale to the text scale of the base buffer
-  ;; (let ((base-buffer (buffer-base-buffer)))
-  ;;   (when base-buffer
-  ;;     (when-let* ((text-scale-amount
-  ;;                  (with-current-buffer base-buffer
-  ;;                    (and (bound-and-true-p text-scale-mode-amount)
-  ;;                         text-scale-mode-amount))))
-  ;;       (text-scale-set text-scale-amount))))
-
-  ;; Restore text scale on all windows
-  (persist-text-scale--hook-restore-all-windows))
+;; (defun persist-text-scale--hook-clone-indirect-buffer ()
+;;   "Function called by `clone-indirect-buffer-hook'."
+;;   ;; Set the text scale to the text scale of the base buffer
+;;   ;; (message "TOTO")
+;;   ;; (let ((base-buffer (buffer-base-buffer)))
+;;   ;;   (when base-buffer
+;;   ;;     (when-let* ((text-scale-amount
+;;   ;;                  (with-current-buffer base-buffer
+;;   ;;                    (when (bound-and-true-p text-scale-mode-amount)
+;;   ;;                      text-scale-mode-amount))))
+;;   ;;       (when text-scale-amount
+;;   ;;         ;; (message "TOTO:%s" text-scale-amount)
+;;   ;;         (text-scale-set text-scale-amount)
+;;   ;;         (setq persist-text-scale--restored-amount nil)
+;;   ;;         (setq persist-text-scale--persisted-amount nil)
+;;   ;;         (persist-text-scale-persist)))))
+;;
+;;   ;; (persist-text-scale-restore)
+;;
+;;   ;; Restore text scale on all windows
+;;   (persist-text-scale--hook-restore-all-windows)
+;;   )
 
 (defun persist-text-scale--hook-restore-all-windows (&optional object)
   "Function called by `window-buffer-change-functions'.
@@ -348,7 +357,9 @@ OBJECT can be a frame or a window."
       (when window
         (with-selected-frame frame
           (with-selected-window window)
-          (persist-text-scale--restore-all-windows))))))
+          (when-let* ((buffer (window-buffer)))
+            (with-current-buffer buffer
+              (persist-text-scale--restore-all-windows))))))))
 
 (defun persist-text-scale-reset ()
   "Reset the text scale for all buffer categories."
@@ -406,9 +417,9 @@ This function writes the text scale data to the file specified by
         (add-hook 'window-buffer-change-functions
                   #'persist-text-scale--hook-restore-all-windows
                   persist-text-scale-depth-window-buffer-change-functions)
-        (add-hook 'clone-indirect-buffer-hook
-                  #'persist-text-scale--hook-clone-indirect-buffer
-                  persist-text-scale-depth-clone-indirect-buffer-hook)
+        ;; (add-hook 'clone-indirect-buffer-hook
+        ;;           #'persist-text-scale--hook-clone-indirect-buffer
+        ;;           persist-text-scale-depth-clone-indirect-buffer-hook)
         (add-hook 'find-file-hook #'persist-text-scale-restore
                   persist-text-scale-depth-find-file-hook)
         ;; Hook: when text scale is changed
@@ -418,8 +429,8 @@ This function writes the text scale data to the file specified by
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save)
     (remove-hook 'window-buffer-change-functions
                  #'persist-text-scale--hook-restore-all-windows)
-    (remove-hook 'clone-indirect-buffer-hook
-                 #'persist-text-scale--hook-clone-indirect-buffer)
+    ;; (remove-hook 'clone-indirect-buffer-hook
+    ;;              #'persist-text-scale--hook-clone-indirect-buffer)
     (remove-hook 'text-scale-mode-hook #'persist-text-scale-persist)
     (remove-hook 'find-file-hook #'persist-text-scale-restore)
     (persist-text-scale-reset)))
