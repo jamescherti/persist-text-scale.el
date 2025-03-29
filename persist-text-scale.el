@@ -97,7 +97,6 @@ When unsure, leave this value as nil."
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
 (defvar persist-text-scale-depth-find-file-hook -99)
-;; (defvar persist-text-scale-depth-clone-indirect-buffer-hook 99)
 (defvar persist-text-scale-depth-text-scale-mode 99)
 
 ;; Internal variables
@@ -238,31 +237,6 @@ Returns nil when the buffer category is nil."
      t
      ;; All frames
      t)))
-
-;; (defun persist-text-scale--hook-clone-indirect-buffer ()
-;;   "Function called by `clone-indirect-buffer-hook'."
-;;   ;; The text scale in indirect buffers is relative to the base buffer. For
-;;   ;; example, if the base buffer's text size is 5, an indirect buffer with a
-;;   ;; scale of 0 will have the same text size as the base buffer (i.e., 5).
-;;   ;; (when (bound-and-true-p text-scale-mode-amount)
-;;   ;;   (setq persist-text-scale--persisted-amount text-scale-mode-amount)
-;;   ;;   (setq persist-text-scale--restored-amount text-scale-mode-amount))
-;;
-;;   ;; (let ((base-buffer (buffer-base-buffer)))
-;;   ;;   (when base-buffer
-;;   ;;     (when-let* ((base-buffer-text-scale-amount
-;;   ;;                  (with-current-buffer base-buffer
-;;   ;;                    (when (bound-and-true-p text-scale-mode-amount)
-;;   ;;                      text-scale-mode-amount))))
-;;   ;;       (text-scale-set base-buffer-text-scale-amount)
-;;   ;;       ;; (persist-text-scale-persist)
-;;   ;;       )))
-;;
-;;   ;; (persist-text-scale-persist)
-;;   ;; (persist-text-scale-restore)
-;;
-;;   ;; (persist-text-scale--window-buffer-change-functions)
-;;   )
 
 (defvar-local persist-text-scale--indirect-buffer-initialized nil)
 
@@ -447,10 +421,6 @@ This function writes the text scale data to the file specified by
                   #'persist-text-scale--window-buffer-change-functions
                   persist-text-scale-depth-window-buffer-change-functions)
 
-        ;; (add-hook 'clone-indirect-buffer-hook
-        ;;           #'persist-text-scale--hook-clone-indirect-buffer
-        ;;           persist-text-scale-depth-clone-indirect-buffer-hook)
-
         (add-hook 'find-file-hook #'persist-text-scale--find-file-hook
                   persist-text-scale-depth-find-file-hook)
 
@@ -463,9 +433,6 @@ This function writes the text scale data to the file specified by
 
     (remove-hook 'window-buffer-change-functions
                  #'persist-text-scale--window-buffer-change-functions)
-
-    ;; (remove-hook 'clone-indirect-buffer-hook
-    ;;              #'persist-text-scale--hook-clone-indirect-buffer)
 
     (remove-hook 'text-scale-mode-hook #'persist-text-scale--text-scale-mode-hook)
 
