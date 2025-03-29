@@ -110,7 +110,12 @@ interactive text scale change and is used internally to support restoration.")
 ;; Internal variables
 
 (defvar persist-text-scale--timer nil)
-(defvar-local persist-text-scale--amount nil)
+(defvar-local persist-text-scale--restored-amount nil
+  "Non-nil indicates that the buffer text scale has been restored.
+This value is set by `persist-text-scale-restore'")
+(defvar-local persist-text-scale--persisted-amount nil
+  "Non-nil indicates that the buffer text scale has been persisted.
+This value is set by `persist-text-scale-persist'.")
 
 ;;; Defun
 
@@ -197,8 +202,8 @@ alist."
          "[persist-text-scale] IGNORE (text-scale-mode-disabled): Persist '%s': %s"
          (buffer-name) text-scale-mode-amount)))
 
-     ((and (bound-and-true-p persist-text-scale--amount)
-           (= text-scale-mode-amount persist-text-scale--amount))
+     ((and (bound-and-true-p persist-text-scale--persisted-amount)
+           (= text-scale-mode-amount persist-text-scale--persisted-amount))
       (when persist-text-scale-verbose
         (message "[persist-text-scale] IGNORE (up-to-date): Persist '%s': %s"
                  (buffer-name) text-scale-mode-amount)))
@@ -226,7 +231,7 @@ alist."
                 (setcdr cons-value new-data)
               (push (cons buffer-category new-data) persist-text-scale--data))
 
-            (setq persist-text-scale--amount text-scale-mode-amount)
+            (setq persist-text-scale--persisted-amount text-scale-mode-amount)
 
             ;; Ensure other windows are updated (e.g., indirect buffers
             ;; or other buffers of the same category)
@@ -239,9 +244,8 @@ alist."
 (defun persist-text-scale-restore ()
   "Restore the text scale for the current buffer."
   (when (or (not persist-text-scale-restore-once)
-            (not persist-text-scale--amount))
+            (not persist-text-scale--restored-amount))
     (when-let* ((amount (persist-text-scale-get-amount)))
-      (setq persist-text-scale--amount amount)
       (if (and (bound-and-true-p text-scale-mode-amount)
                (= amount text-scale-mode-amount))
           ;; Ignore
@@ -257,7 +261,8 @@ alist."
                    (buffer-name)
                    (persist-text-scale--buffer-category)
                    amount))
-        (text-scale-set amount)))))
+        (text-scale-set amount)
+        (setq persist-text-scale--restored-amount amount)))))
 
 (defun persist-text-scale--restore-all-windows ()
   "Restore the text scale on all windows in the current frame."
@@ -282,8 +287,8 @@ OBJECT can be a frame or a window."
   (dolist (buf (buffer-list))
     (when (buffer-live-p buf)
       (with-current-buffer buf
-        (when persist-text-scale--amount
-          (setq persist-text-scale--amount nil)))))
+        (when persist-text-scale--restored-amount
+          (setq persist-text-scale--restored-amount nil)))))
 
   (setq persist-text-scale--data nil))
 
