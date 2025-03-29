@@ -229,6 +229,10 @@ alist."
 
             (setq persist-text-scale--amount text-scale-mode-amount)
 
+            ;; Ensure other windows are updated (e.g., indirect buffers
+            ;; or other buffers of the same category)
+            (persist-text-scale--restore-all-windows)
+
             ;; TODO: Move to a separate function
             (setq persist-text-scale--last-text-scale-amount
                   text-scale-mode-amount))))))))
