@@ -421,8 +421,8 @@ This function writes the text scale data to the file specified by
                   #'persist-text-scale--window-buffer-change-functions
                   persist-text-scale-depth-window-buffer-change-functions)
 
-        (add-hook 'find-file-hook #'persist-text-scale--find-file-hook
-                  persist-text-scale-depth-find-file-hook)
+        ;; (add-hook 'find-file-hook #'persist-text-scale--find-file-hook
+        ;;           persist-text-scale-depth-find-file-hook)
 
         ;; Hook: when text scale is changed
         (add-hook 'text-scale-mode-hook
@@ -436,7 +436,7 @@ This function writes the text scale data to the file specified by
 
     (remove-hook 'text-scale-mode-hook #'persist-text-scale--text-scale-mode-hook)
 
-    (remove-hook 'find-file-hook #'persist-text-scale--find-file-hook)
+    ;; (remove-hook 'find-file-hook #'persist-text-scale--find-file-hook)
     (persist-text-scale-reset)))
 
 (provide 'persist-text-scale)
