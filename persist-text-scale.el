@@ -294,6 +294,14 @@ OBJECT can be a frame or a window."
           (with-selected-window window
             (when-let* ((buffer (window-buffer)))
               (with-current-buffer buffer
+                ;; (when (and (buffer-base-buffer)
+                ;;            (not persist-text-scale--indirect-buffer-initialized))
+                ;;   (when (bound-and-true-p text-scale-mode-amount)
+                ;;     (setq persist-text-scale--restored-amount text-scale-mode-amount)
+                ;;     (setq persist-text-scale--persisted-amount nil)
+                ;;     (persist-text-scale-persist))
+                ;;   (setq persist-text-scale--indirect-buffer-initialized t))
+
                 ;; Restore all windows
                 (persist-text-scale--restore-all-windows)))))))))
 
