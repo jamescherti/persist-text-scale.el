@@ -154,7 +154,7 @@ If `persist-text-scale-mode' is enabled, set the timer, otherwise cancel the
 timer."
   (persist-text-scale--cancel-timer)
   (if (and (bound-and-true-p persist-text-scale-mode)
-           (bound-and-true-p persist-text-scale-autosave-interval)
+           persist-text-scale-autosave-interval
            (null persist-text-scale--timer))
       (setq persist-text-scale--timer
             (run-with-timer persist-text-scale-autosave-interval
@@ -294,10 +294,13 @@ OBJECT can be a frame or a window."
   "Hook function triggered by `text-scale-mode-hook'.
 Persists the current text scale and updates all relevant windows,
 including indirect buffers or buffers within the same category."
-  (persist-text-scale-persist)
-  ;; Ensure other windows are updated (e.g., indirect buffers
-  ;; or other buffers of the same category)
-  (persist-text-scale--restore-all-windows))
+  ;; Remove the function from text-scale-mode-hook to avoid infinite recursion
+  (let ((text-scale-mode-hook (delq 'persist-text-scale--text-scale-mode-hook
+                                    (copy-sequence text-scale-mode-hook))))
+    (persist-text-scale-persist)
+    ;; Ensure other windows are updated (e.g., indirect buffers
+    ;; or other buffers of the same category)
+    (persist-text-scale--restore-all-windows)))
 
 ;;; Functions
 
