@@ -210,9 +210,7 @@ Returns a unique identifier string based."
 
                       ;; Indirect buffers
                       (base-buffer
-                       (format "ib%s:%s"
-                               (persist-text-scale--buffer-name-suffix-number
-                                buffer-name)
+                       (format "ib:%s"
                                buffer-name))
 
                       ;; Major-modes
