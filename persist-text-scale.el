@@ -188,7 +188,11 @@ Returns a unique identifier string based."
 
                       ;; File visiting indirect buffers
                       ((and base-buffer file-name)
-                       (format "fib:%s" (file-truename file-name)))
+                       (format
+                        "fib%s:%s"
+                        (persist-text-scale--buffer-name-suffix-number
+                         buffer-name)
+                        (file-truename file-name)))
 
                       ;; File visiting buffers
                       (file-name
@@ -206,7 +210,10 @@ Returns a unique identifier string based."
 
                       ;; Indirect buffers
                       (base-buffer
-                       (format "ib:%s" buffer-name))
+                       (format "ib%s:%s"
+                               (persist-text-scale--buffer-name-suffix-number
+                                buffer-name)
+                               buffer-name))
 
                       ;; Major-modes
                       ((and (boundp 'major-mode) major-mode)
@@ -289,16 +296,6 @@ OBJECT can be a frame or a window."
           (with-selected-window window
             (when-let* ((buffer (window-buffer)))
               (with-current-buffer buffer
-                ;; Indirect buffers
-                (when (and (buffer-base-buffer)
-                           (not persist-text-scale--indirect-buffer-initialized))
-                  (when (bound-and-true-p text-scale-mode-amount)
-                    (setq persist-text-scale--restored-amount text-scale-mode-amount)
-                    (setq persist-text-scale--persisted-amount nil)
-                    (persist-text-scale-persist)
-                    (setq persist-text-scale--persisted-amount text-scale-mode-amount))
-                  (setq persist-text-scale--indirect-buffer-initialized t))
-
                 ;; Restore all windows
                 (persist-text-scale--restore-all-windows)))))))))
 
@@ -316,6 +313,13 @@ including indirect buffers or buffers within the same category."
     (persist-text-scale--restore-all-windows)))
 
 ;;; Functions
+
+(defun persist-text-scale--buffer-name-suffix-number (buffer-name)
+  "Extract the number at the end of BUFFER-NAME (e.g., 'name<2>').
+Return an empty string if no number is found."
+  (if (string-match "<\\([0-9]+\\)>$" buffer-name)
+      (match-string 1 buffer-name)
+    ""))
 
 (defun persist-text-scale-persist ()
   "Save the current text scale for the current buffer.

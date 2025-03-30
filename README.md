@@ -20,6 +20,7 @@ This category-based behavior can be further customized by assigning a function t
 - Supports unified text scaling across buffer categories.
 - Offers fully customizable logic for categorizing buffers based on text scale.
 - Enables custom buffer categorization by specifying a function for the `persist-text-scale-buffer-category-function` variable, ensuring that groups of buffers share the same persisted and restored text scale.
+- The user can define the maximum number of retained entries using `persist-text-scale-history-length`.
 
 ## Installation
 
