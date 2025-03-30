@@ -349,7 +349,7 @@ alist."
                               (assoc buffer-category
                                      persist-text-scale--data)))
                 (new-data (list (cons 'text-scale-amount text-scale-mode-amount)
-                                (cons 'mtime (float-time (current-time))))))
+                                (cons 'atime (float-time (current-time))))))
             (if cons-value
                 (setcdr cons-value new-data)
               (push (cons buffer-category new-data) persist-text-scale--data))
@@ -364,24 +364,28 @@ alist."
   "Restore the text scale for the current buffer."
   (when (or (not persist-text-scale-restore-once)
             (not persist-text-scale--restored-amount))
-    (when-let* ((amount (persist-text-scale--get-amount)))
-      (if (and (bound-and-true-p text-scale-mode-amount)
-               (= amount text-scale-mode-amount))
-          ;; Ignore
+    (when-let* ((buffer-category (persist-text-scale--buffer-category)))
+      (when-let* ((amount (persist-text-scale--get-amount)))
+        (if (and (bound-and-true-p text-scale-mode-amount)
+                 (= amount text-scale-mode-amount))
+            ;; Ignore
+            (persist-text-scale--verbose-message
+             (concat "IGNORED (up-to-date): Restore '%s': %s: %s")
+             (buffer-name) buffer-category amount)
+          ;; Restore
           (persist-text-scale--verbose-message
-           (concat "IGNORED "
-                   "(up-to-date): Restore '%s': %s: %s")
-           (buffer-name)
-           (persist-text-scale--buffer-category)
-           amount)
-        ;; Restore
-        (persist-text-scale--verbose-message
-         "Restore '%s': %s: %s"
-         (buffer-name)
-         (persist-text-scale--buffer-category)
-         amount)
-        (text-scale-set amount)
-        (setq persist-text-scale--restored-amount amount)))))
+           "Restore '%s': %s: %s" (buffer-name) buffer-category amount)
+          (text-scale-set amount)
+          (setq persist-text-scale--restored-amount amount)
+
+          ;; Update atime after restore
+          (let ((cons-value (when persist-text-scale--data
+                              (assoc buffer-category
+                                     persist-text-scale--data)))
+                (new-data (list (cons 'text-scale-amount amount)
+                                (cons 'atime (float-time (current-time))))))
+            (when cons-value
+              (setcdr cons-value new-data))))))))
 
 (defun persist-text-scale-reset ()
   "Reset the text scale for all buffer categories."
@@ -426,23 +430,22 @@ This function writes the text scale data to the file specified by
   (load persist-text-scale-file t t t))
 
 (defun persist-text-scale--sort ()
-  "Sort `persist-text-scale--data' using mtime."
+  "Sort `persist-text-scale--data' using atime."
   (setq persist-text-scale--data
         (sort persist-text-scale--data
               (lambda (entry1 entry2)
-                (let ((mtime1 (cdr (assoc 'mtime (cdr entry1))))
-                      (mtime2 (cdr (assoc 'mtime (cdr entry2)))))
-                  (when (and mtime1 (not (floatp mtime1)))
-                    (setq mtime1 (float-time mtime1)))
-                  (when (and mtime2 (not (floatp mtime2)))
-                    (setq mtime2 (float-time mtime2)))
+                (let ((atime1 (cdr (assoc 'atime (cdr entry1))))
+                      (atime2 (cdr (assoc 'atime (cdr entry2)))))
                   (cond
-                   ;; Compare mtime1 and mtime2
-                   ((and mtime1 mtime2) (< mtime1 mtime2))
-                   ;; If mtime1 is nil, put entry1 after entry2
-                   ((not mtime1) t)
-                   ;; If mtime2 is nil, put entry2 after entry1
-                   ((not mtime2) nil)))))))
+                   ;; Compare atime1 and atime2
+                   ((and atime1 atime2)
+                    (< atime1 atime2))
+                   ;; If atime1 is nil, put entry1 after entry2
+                   ((not atime1)
+                    t)
+                   ;; If atime2 is nil, put entry2 after entry1
+                   ((not atime2)
+                    nil)))))))
 
 (defun persist-text-scale-cleanup ()
   "Delete old entries."
