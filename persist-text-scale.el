@@ -49,6 +49,7 @@
 ;;; Require
 
 (require 'face-remap)
+(require 'cl-lib)
 
 ;;; Defcustom
 
@@ -72,6 +73,12 @@ information at the specified interval.
 If set to nil, disables timer-based autosaving entirely."
   :type '(choice (const :tag "Disabled" nil)
                  (integer :tag "Seconds"))
+  :group 'persist-text-scale)
+
+(defcustom persist-text-scale-cleanup-threshold (* 7 86400)
+  "Number of seconds to keep persist-text-scale entries before deleting them.
+The default value is 7 days (7 * 86400)."
+  :type 'integer
   :group 'persist-text-scale)
 
 (defcustom persist-text-scale-buffer-category-function nil
@@ -314,13 +321,13 @@ alist."
     (cond
      ((not (bound-and-true-p text-scale-mode-amount))
       (persist-text-scale--verbose-message
-       "[persist-text-scale] IGNORE (text-scale-mode-disabled): Persist '%s': %s"
+       "IGNORE (text-scale-mode-disabled): Persist '%s': %s"
        (buffer-name) text-scale-mode-amount))
 
      ((and (bound-and-true-p persist-text-scale--persisted-amount)
            (= text-scale-mode-amount persist-text-scale--persisted-amount))
       (persist-text-scale--verbose-message
-       "[persist-text-scale] IGNORE (up-to-date): Persist '%s': %s"
+       "IGNORE (up-to-date): Persist '%s': %s"
        (buffer-name) text-scale-mode-amount))
 
      (t
@@ -328,11 +335,11 @@ alist."
         (if (not buffer-category)
             ;; No category
             (persist-text-scale--verbose-message
-             "[persist-text-scale] IGNORE (:ignore category): Persist '%s': %s: %s"
+             "IGNORE (:ignore category): Persist '%s': %s: %s"
              (buffer-name) buffer-category text-scale-mode-amount)
           ;; Category found
           (persist-text-scale--verbose-message
-           "[persist-text-scale] Persist '%s': %s: %s"
+           "Persist '%s': %s: %s"
            (buffer-name) buffer-category text-scale-mode-amount)
 
           (let ((cons-value (when (and persist-text-scale--data
@@ -360,14 +367,14 @@ alist."
                (= amount text-scale-mode-amount))
           ;; Ignore
           (persist-text-scale--verbose-message
-           (concat "[persist-text-scale] IGNORED "
+           (concat "IGNORED "
                    "(up-to-date): Restore '%s': %s: %s")
            (buffer-name)
            (persist-text-scale--buffer-category)
            amount)
         ;; Restore
         (persist-text-scale--verbose-message
-         "[persist-text-scale] Restore '%s': %s: %s"
+         "Restore '%s': %s: %s"
          (buffer-name)
          (persist-text-scale--buffer-category)
          amount)
@@ -390,6 +397,7 @@ alist."
 
 This function writes the text scale data to the file specified by
 `persist-text-scale-file', preserving the state for future sessions."
+  (persist-text-scale-cleanup)
   (with-temp-buffer
     (insert ";; -*- mode: emacs-lisp; coding: utf-8-unix -*-\n")
     (insert (concat ";; Persist Text Scale file, automatically generated "
@@ -414,6 +422,28 @@ This function writes the text scale data to the file specified by
 (defun persist-text-scale-load-file ()
   "Load data from `persist-text-scale-file'."
   (load persist-text-scale-file t t t))
+
+(defun persist-text-scale-cleanup (&optional threshold)
+  "Delete entries where the mtime is older than THRESHOLD seconds."
+  (unless threshold
+    (setq threshold persist-text-scale-cleanup-threshold))
+  (setq persist-text-scale--data
+        (cl-remove-if
+         (lambda (entry)
+           (let ((mtime (cdr (assoc 'mtime (cdr entry)))))
+             (when (consp mtime)
+               ;; (current-time) format
+               (setq mtime (float-time mtime)))
+
+             (when (floatp mtime)
+               (if (> (- (float-time (current-time)) mtime) threshold)
+                   (progn
+                     (persist-text-scale--verbose-message
+                      "Delete outdated entry: %s" entry)
+                     t)
+                 nil))))
+         persist-text-scale--data))
+  nil)
 
 ;;; Mode
 
