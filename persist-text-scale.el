@@ -441,9 +441,7 @@ This function writes the text scale data to the file specified by
                      (progn
                        (persist-text-scale--verbose-message
                         "Delete outdated entry: %s" entry)
-                       nil
-                       ;; t
-                       )
+                       t)
                    nil))))
            persist-text-scale--data))
     nil))
