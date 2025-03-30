@@ -23,19 +23,26 @@
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; The persist-text-scale Emacs package provides persist-text-scale-mode,
-;; which ensures that all adjustments made with text-scale-increase and
-;; text-scale-decrease are persisted and restored across sessions. As a
-;; result, the text size in each buffer remains consistent, even after
-;; restarting Emacs.
+;; The persist-text-scale Emacs package provides persist-text-scale-mode, which
+;; ensures that all adjustments made with text-scale-increase and
+;; text-scale-decrease are persisted and restored across sessions. As a result,
+;; the text size in each buffer remains consistent, even after restarting Emacs.
 ;;
-;; (By default, persist-text-scale-mode saves the text scale individually for
-;; each file-visiting buffer and applies a custom text scale for each special
-;; buffer. This behavior can be further customized by assigning a function to
-;; the persist-text-scale-buffer-category-function variable. The function
-;; determines how buffers are categorized by returning a category identifier
-;; based on the buffer's context. Buffers within the same category will share
-;; the same text scale.)
+;; This package also facilitates grouping buffers into categories, allowing
+;; buffers within the same category to share a consistent text scale. This
+;; ensures uniform font sizes when adjusting text scaling. By default:
+;; - Each file-visiting buffer has its own independent text scale.
+;; - Special buffers, identified by their buffer names, each retain their own
+;;   text scale setting.
+;; - All Dired buffers maintain the same font size, treating Dired as a unified
+;;   "file explorer" where the text scale remains consistent across different
+;;   buffers.
+;;
+;; This category-based behavior can be further customized by assigning a
+;; function to the persist-text-scale-buffer-category-function variable. The
+;; function determines how buffers are categorized by returning a category
+;; identifier (string) based on the buffer's context. Buffers within the same
+;; category will share the same text scale.
 
 ;;; Code:
 
@@ -68,11 +75,18 @@ If set to nil, disables timer-based autosaving entirely."
   :group 'persist-text-scale)
 
 (defcustom persist-text-scale-buffer-category-function nil
-  "Optional function to customize buffer category classification.
-If non-nil, this function overrides the `persist-text-scale--buffer-category'
-function and is invoked to determine the buffer category identifier used for
-text scale grouping. It must return a string or symbol representing the buffer
-category, or nil to fall back to the default classification."
+  "Function to determine the buffer category for text scale persistence.
+If non-nil, this function overrides `persist-text-scale--buffer-category'
+and is called to classify the buffer for text scaling purposes.
+
+It must return one of the following values:
+- A string or symbol representing the buffer category (for grouping),
+- :ignore to exclude the buffer from persistence,
+- nil to defer to the default classification via
+`persist-text-scale--buffer-category'.
+
+This allows customization of how buffers are grouped when persisting text scale
+settings."
   :type '(choice (const :tag "None" nil) function)
   :group 'persist-text-scale)
 
@@ -99,12 +113,10 @@ When unsure, leave this value as nil."
 (defvar persist-text-scale-depth-find-file-hook -99)
 (defvar persist-text-scale-depth-text-scale-mode 99)
 
-;; Internal variables
+;;; Internal variables
 
 (defvar persist-text-scale--data nil
-  "Alist mapping buffer identifiers to their corresponding text scale amount.
-Each entry associates either a file path or a buffer category name with the
-numeric value of the text scale applied to that buffer or group.")
+  "Alist mapping buffer identifiers to their corresponding text scale amount.")
 
 (defvar persist-text-scale--last-text-scale-amount nil
   "Most recent text scale amount selected by the user.
@@ -112,12 +124,15 @@ This value reflects the numeric text scale adjustment applied in the last
 interactive text scale change and is used internally to support restoration.")
 
 (defvar persist-text-scale--timer nil)
+
 (defvar-local persist-text-scale--restored-amount nil
   "Non-nil indicates that the buffer text scale has been restored.
 This value is set by `persist-text-scale-restore'")
 (defvar-local persist-text-scale--persisted-amount nil
   "Non-nil indicates that the buffer text scale has been persisted.
 This value is set by `persist-text-scale-persist'.")
+
+(defvar-local persist-text-scale--indirect-buffer-initialized nil)
 
 ;;; Internal functions and macros
 
@@ -144,7 +159,7 @@ timer."
       (setq persist-text-scale--timer
             (run-with-timer persist-text-scale-autosave-interval
                             persist-text-scale-autosave-interval
-                            #'persist-text-scale-save))))
+                            #'persist-text-scale-save-file))))
 
 (defun persist-text-scale--buffer-category ()
   "Generate a unique name for the current buffer.
@@ -160,7 +175,7 @@ Returns a unique identifier string based."
                      (cond
                       ;; Ignore old buffers
                       ((string-prefix-p " *Old buffer" buffer-name)
-                       nil)
+                       :ignore)
 
                       ;; File visiting indirect buffers
                       ((and base-buffer file-name)
@@ -172,8 +187,7 @@ Returns a unique identifier string based."
 
                       ;; Special buffers
                       ((and (not file-name)
-                            (or (and (string-prefix-p "*" buffer-name)
-                                     (string-suffix-p "*" buffer-name))
+                            (or (string-prefix-p "*" buffer-name)
                                 (string-prefix-p " " buffer-name)
                                 (derived-mode-p 'special-mode)
                                 (minibufferp (current-buffer))))
@@ -200,19 +214,19 @@ Returns a unique identifier string based."
       result)))
 
 (defun persist-text-scale--get-amount ()
-  "Retrieve the text scale factor for the current buffer category.
-Returns nil when the buffer category is nil."
+  "Return the text scale amount for the current buffer category.
+If the buffer category is nil or no scale amount has been stored, return nil."
   (when-let* ((category (persist-text-scale--buffer-category)))
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
                         ;; TODO: Only for non-special buffers
                         ;; persist-text-scale--last-text-scale-amount
                         )))
       (cond
-       ((integerp cat-data)
-        cat-data)
-
        ((listp cat-data)
         (cdr (assoc 'text-scale-amount cat-data)))
+
+       ((integerp cat-data)
+        cat-data)
 
        (t
         nil)))))
@@ -229,7 +243,7 @@ Returns nil when the buffer category is nil."
      (lambda (window)
        (unless (eq window current-window)
          (with-selected-window window
-           (let ((buffer (window-buffer)))
+           (when-let* ((buffer (window-buffer)))
              (unless (eq current-buffer buffer)
                (with-current-buffer buffer
                  (persist-text-scale-restore)))))))
@@ -238,58 +252,52 @@ Returns nil when the buffer category is nil."
      ;; All frames
      t)))
 
-(defvar-local persist-text-scale--indirect-buffer-initialized nil)
-
 (defun persist-text-scale--window-buffer-change-functions (&optional object)
   "Function called by `window-buffer-change-functions'.
 OBJECT can be a frame or a window."
-  ;; ind buffers
   (when (bound-and-true-p persist-text-scale-mode)
-    (let ((frame (if (frame-live-p object)
-                     object
-                   (selected-frame)))
-          (window (cond ((not object)
-                         nil)
+    (let* ((is-frame (frame-live-p object))
+           (frame (if is-frame
+                      object
+                    (selected-frame)))
+           (window (cond
+                    ;; Frame
+                    (is-frame
+                     (with-selected-frame object
+                       (selected-window)))
+                    ;; Window
+                    ((window-live-p object)
+                     object)
+                    ;; Current window
+                    (t
+                     (selected-window)))))
 
-                        ((frame-live-p object)
-                         (with-selected-frame object
-                           (selected-window)))
-
-                        ((window-live-p object)
-                         object)
-
-                        (t
-                         (selected-window)))))
-
-      (when window
+      (when (and frame window)
         (with-selected-frame frame
-          (with-selected-window window)
-          (when-let* ((buffer (window-buffer)))
-            (with-current-buffer buffer
-              ;; Indirect buffers
-              (when (and (buffer-base-buffer)
-                         (not persist-text-scale--indirect-buffer-initialized))
-                (when (bound-and-true-p text-scale-mode-amount)
-                  (setq persist-text-scale--restored-amount text-scale-mode-amount)
-                  (setq persist-text-scale--persisted-amount nil)
-                  (persist-text-scale-persist)
-                  (setq persist-text-scale--persisted-amount text-scale-mode-amount))
-                (setq persist-text-scale--indirect-buffer-initialized t))
+          (with-selected-window window
+            (when-let* ((buffer (window-buffer)))
+              (with-current-buffer buffer
+                ;; Indirect buffers
+                (when (and (buffer-base-buffer)
+                           (not persist-text-scale--indirect-buffer-initialized))
+                  (when (bound-and-true-p text-scale-mode-amount)
+                    (setq persist-text-scale--restored-amount text-scale-mode-amount)
+                    (setq persist-text-scale--persisted-amount nil)
+                    (persist-text-scale-persist)
+                    (setq persist-text-scale--persisted-amount text-scale-mode-amount))
+                  (setq persist-text-scale--indirect-buffer-initialized t))
 
-              ;; Restore all windows
-              (persist-text-scale--restore-all-windows))))))))
+                ;; Restore all windows
+                (persist-text-scale--restore-all-windows)))))))))
 
 (defun persist-text-scale--text-scale-mode-hook ()
-  "Triggered by `text-scale-mode-hook'."
+  "Hook function triggered by `text-scale-mode-hook'.
+Persists the current text scale and updates all relevant windows,
+including indirect buffers or buffers within the same category."
   (persist-text-scale-persist)
-
   ;; Ensure other windows are updated (e.g., indirect buffers
   ;; or other buffers of the same category)
   (persist-text-scale--restore-all-windows))
-
-;; (defun persist-text-scale--find-file-hook ()
-;;   "Triggered by `find-file-hook'."
-;;   (persist-text-scale-restore))
 
 ;;; Functions
 
@@ -373,7 +381,7 @@ alist."
 
   (setq persist-text-scale--data nil))
 
-(defun persist-text-scale-save ()
+(defun persist-text-scale-save-file ()
   "Save the current text scale data to `persist-text-scale-file'.
 
 This function writes the text scale data to the file specified by
@@ -399,7 +407,7 @@ This function writes the text scale data to the file specified by
       (write-region
        (point-min) (point-max) persist-text-scale-file nil 'silent))))
 
-(defun persist-text-scale-load ()
+(defun persist-text-scale-load-file ()
   "Load data from `persist-text-scale-file'."
   (load persist-text-scale-file t t t))
 
@@ -413,30 +421,26 @@ This function writes the text scale data to the file specified by
   :group 'persist-text-scale
   (if persist-text-scale-mode
       (progn
-        (persist-text-scale-load)
+        (persist-text-scale-load-file)
         (persist-text-scale--manage-timer)
-        (add-hook 'kill-emacs-hook #'persist-text-scale-save)
+        (add-hook 'kill-emacs-hook #'persist-text-scale-save-file)
 
         (add-hook 'window-buffer-change-functions
                   #'persist-text-scale--window-buffer-change-functions
                   persist-text-scale-depth-window-buffer-change-functions)
-
-        ;; (add-hook 'find-file-hook #'persist-text-scale--find-file-hook
-        ;;           persist-text-scale-depth-find-file-hook)
 
         ;; Hook: when text scale is changed
         (add-hook 'text-scale-mode-hook
                   #'persist-text-scale--text-scale-mode-hook
                   persist-text-scale-depth-text-scale-mode))
     (persist-text-scale--cancel-timer)
-    (remove-hook 'kill-emacs-hook #'persist-text-scale-save)
+    (remove-hook 'kill-emacs-hook #'persist-text-scale-save-file)
 
     (remove-hook 'window-buffer-change-functions
                  #'persist-text-scale--window-buffer-change-functions)
 
     (remove-hook 'text-scale-mode-hook #'persist-text-scale--text-scale-mode-hook)
 
-    ;; (remove-hook 'find-file-hook #'persist-text-scale--find-file-hook)
     (persist-text-scale-reset)))
 
 (provide 'persist-text-scale)
