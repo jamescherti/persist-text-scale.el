@@ -347,7 +347,7 @@ alist."
                               (assoc buffer-category
                                      persist-text-scale--data)))
                 (new-data (list (cons 'text-scale-amount text-scale-mode-amount)
-                                (cons 'mtime (current-time)))))
+                                (cons 'mtime (float-time (current-time))))))
             (if cons-value
                 (setcdr cons-value new-data)
               (push (cons buffer-category new-data) persist-text-scale--data))
@@ -397,7 +397,7 @@ alist."
 
 This function writes the text scale data to the file specified by
 `persist-text-scale-file', preserving the state for future sessions."
-  (persist-text-scale-cleanup)
+  ;; (persist-text-scale-cleanup)
   (with-temp-buffer
     (insert ";; -*- mode: emacs-lisp; coding: utf-8-unix -*-\n")
     (insert (concat ";; Persist Text Scale file, automatically generated "
@@ -425,25 +425,28 @@ This function writes the text scale data to the file specified by
 
 (defun persist-text-scale-cleanup (&optional threshold)
   "Delete entries where the mtime is older than THRESHOLD seconds."
-  (unless threshold
-    (setq threshold persist-text-scale-cleanup-threshold))
-  (setq persist-text-scale--data
-        (cl-remove-if
-         (lambda (entry)
-           (let ((mtime (cdr (assoc 'mtime (cdr entry)))))
-             (when (consp mtime)
-               ;; (current-time) format
-               (setq mtime (float-time mtime)))
+  (let ((time (current-time)))
+    (unless threshold
+      (setq threshold persist-text-scale-cleanup-threshold))
+    (setq persist-text-scale--data
+          (cl-remove-if
+           (lambda (entry)
+             (let ((mtime (cdr (assoc 'mtime (cdr entry)))))
+               (when (consp mtime)
+                 ;; consp=time. Normalize it by converting it to float.
+                 (setq mtime (float-time mtime)))
 
-             (when (floatp mtime)
-               (if (> (- (float-time (current-time)) mtime) threshold)
-                   (progn
-                     (persist-text-scale--verbose-message
-                      "Delete outdated entry: %s" entry)
-                     t)
-                 nil))))
-         persist-text-scale--data))
-  nil)
+               (when (floatp mtime)
+                 (if (> (- time mtime) threshold)
+                     (progn
+                       (persist-text-scale--verbose-message
+                        "Delete outdated entry: %s" entry)
+                       nil
+                       ;; t
+                       )
+                   nil))))
+           persist-text-scale--data))
+    nil))
 
 ;;; Mode
 
