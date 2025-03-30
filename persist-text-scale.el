@@ -75,10 +75,12 @@ If set to nil, disables timer-based autosaving entirely."
                  (integer :tag "Seconds"))
   :group 'persist-text-scale)
 
-(defcustom persist-text-scale-cleanup-threshold (* 20 86400)
-  "Number of seconds to keep persist-text-scale entries before deleting them.
-The default value is 30 days (20 * 86400)."
-  :type 'integer
+(defcustom persist-text-scale-history-length 100
+  "Maximum number of entries to retain.
+Entries represent categories such as file-visiting buffers, special buffers,
+etc. If set to nil, cleanup is disabled and no entries will be deleted."
+  :type '(choice (integer :tag "Maximum number of entries")
+                 (const :tag "Disable cleanup" nil))
   :group 'persist-text-scale)
 
 (defcustom persist-text-scale-buffer-category-function nil
@@ -423,28 +425,33 @@ This function writes the text scale data to the file specified by
   "Load data from `persist-text-scale-file'."
   (load persist-text-scale-file t t t))
 
-(defun persist-text-scale-cleanup (&optional threshold)
-  "Delete entries where the mtime is older than THRESHOLD seconds."
-  (let ((time (float-time (current-time))))
-    (unless threshold
-      (setq threshold persist-text-scale-cleanup-threshold))
-    (setq persist-text-scale--data
-          (cl-remove-if
-           (lambda (entry)
-             (let ((mtime (cdr (assoc 'mtime (cdr entry)))))
-               (when (consp mtime)
-                 ;; consp=time. Normalize it by converting it to float.
-                 (setq mtime (float-time mtime)))
+(defun persist-text-scale--sort ()
+  "Sort `persist-text-scale--data' using mtime."
+  (setq persist-text-scale--data
+        (sort persist-text-scale--data
+              (lambda (entry1 entry2)
+                (let ((mtime1 (cdr (assoc 'mtime (cdr entry1))))
+                      (mtime2 (cdr (assoc 'mtime (cdr entry2)))))
+                  (when (and mtime1 (not (floatp mtime1)))
+                    (setq mtime1 (float-time mtime1)))
+                  (when (and mtime2 (not (floatp mtime2)))
+                    (setq mtime2 (float-time mtime2)))
+                  (cond
+                   ;; Compare mtime1 and mtime2
+                   ((and mtime1 mtime2) (< mtime1 mtime2))
+                   ;; If mtime1 is nil, put entry1 after entry2
+                   ((not mtime1) t)
+                   ;; If mtime2 is nil, put entry2 after entry1
+                   ((not mtime2) nil)))))))
 
-               (when (floatp mtime)
-                 (if (> (- time mtime) threshold)
-                     (progn
-                       (persist-text-scale--verbose-message
-                        "Delete outdated entry: %s" entry)
-                       t)
-                   nil))))
-           persist-text-scale--data))
-    nil))
+(defun persist-text-scale-cleanup ()
+  "Delete old entries."
+  (when persist-text-scale-history-length
+    (persist-text-scale--sort)
+    (setq persist-text-scale--data
+          (cl-subseq persist-text-scale--data
+                     (max 0 (- (length persist-text-scale--data)
+                               persist-text-scale-history-length))))))
 
 ;;; Mode
 
