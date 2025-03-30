@@ -321,7 +321,7 @@ including indirect buffers or buffers within the same category."
 ;;; Functions
 
 (defun persist-text-scale--buffer-name-suffix-number (buffer-name)
-  "Extract the number at the end of BUFFER-NAME (e.g., 'name<2>').
+  "Extract the number at the end of BUFFER-NAME (e.g., \='name<2>\=').
 Return an empty string if no number is found."
   (if (string-match "<\\([0-9]+\\)>$" buffer-name)
       (match-string 1 buffer-name)
