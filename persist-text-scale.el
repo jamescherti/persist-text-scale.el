@@ -116,6 +116,13 @@ When unsure, leave this value as nil."
   :type 'boolean
   :group 'persist-text-scale)
 
+(defcustom persist-text-scale-handle-file-renames t
+  "If non-nil, preserve text scale settings when a buffer's file is renamed.
+Updates the buffer association to the new file path to maintain consistency.
+Without this, renaming a file resets the text scale."
+  :type 'boolean
+  :group 'persist-text-scale)
+
 ;;; Variables
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
@@ -140,7 +147,8 @@ This value is set by `persist-text-scale-restore'")
 (defvar-local persist-text-scale--persisted-amount nil
   "Non-nil indicates that the buffer text scale has been persisted.
 This value is set by `persist-text-scale-persist'.")
-
+(defvar-local persist-text-scale--filename nil
+  "This is used to handle renames.")
 (defvar-local persist-text-scale--indirect-buffer-initialized nil)
 
 ;;; Internal functions and macros
@@ -311,6 +319,9 @@ Persists the current text scale and updates all relevant windows,
 including indirect buffers or buffers within the same category."
   (persist-text-scale-persist)
 
+  (setq persist-text-scale--last-text-scale-amount
+        text-scale-mode-amount)
+
   ;; Remove the function from text-scale-mode-hook to avoid infinite recursion
   (let ((text-scale-mode-hook (delq 'persist-text-scale--text-scale-mode-hook
                                     (copy-sequence text-scale-mode-hook))))
@@ -367,14 +378,30 @@ alist."
                 (setcdr cons-value new-data)
               (push (cons buffer-category new-data) persist-text-scale--data))
 
-            (setq persist-text-scale--persisted-amount text-scale-mode-amount)
+            (setq persist-text-scale--persisted-amount text-scale-mode-amount))))))))
 
-            ;; TODO: Move to a separate function
-            (setq persist-text-scale--last-text-scale-amount
-                  text-scale-mode-amount))))))))
+(defun persist-text-scale--handle-file-renames ()
+  "Handle file renames."
+  (when persist-text-scale-handle-file-renames
+    (when-let* ((filename (buffer-file-name (buffer-base-buffer))))
+      (cond
+       (persist-text-scale--filename
+        (let ((new-filename (file-truename filename)))
+          (unless (string= persist-text-scale--filename filename)
+            (persist-text-scale--verbose-message
+             "Persisting text scale settings due to file rename: %s -> %s"
+             persist-text-scale--filename new-filename)
+            (setq persist-text-scale--persisted-amount nil)
+            (persist-text-scale-persist))))
+
+       (t
+        (setq persist-text-scale--filename (file-truename filename)))))))
 
 (defun persist-text-scale-restore ()
   "Restore the text scale for the current buffer."
+  ;; Handle renames
+  (persist-text-scale--handle-file-renames)
+
   (when (or (not persist-text-scale-restore-once)
             (not persist-text-scale--restored-amount))
     (when-let* ((buffer-category (persist-text-scale--buffer-category)))
