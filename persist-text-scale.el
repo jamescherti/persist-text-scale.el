@@ -75,9 +75,9 @@ If set to nil, disables timer-based autosaving entirely."
                  (integer :tag "Seconds"))
   :group 'persist-text-scale)
 
-(defcustom persist-text-scale-cleanup-threshold (* 7 86400)
+(defcustom persist-text-scale-cleanup-threshold (* 20 86400)
   "Number of seconds to keep persist-text-scale entries before deleting them.
-The default value is 7 days (7 * 86400)."
+The default value is 30 days (20 * 86400)."
   :type 'integer
   :group 'persist-text-scale)
 
