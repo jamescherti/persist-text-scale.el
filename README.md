@@ -36,6 +36,10 @@ To install *persist-text-scale* with `straight.el`:
              :host github
              :repo "jamescherti/persist-text-scale.el")
   :custom
+  ;; Time interval, in seconds, between automatic saves of text scale data.
+  ;; If set to an integer value, enables periodic autosaving of persisted text
+  ;; scale information at the specified interval.
+  ;; If set to nil, disables timer-based autosaving entirely.
   (persist-text-scale-autosave-interval (* 7 60))
   :config
   (persist-text-scale-mode))
@@ -51,6 +55,10 @@ To install *persist-text-scale* with `use-package` and `:vc` (Emacs >= 30):
   :vc (:url "https://github.com/jamescherti/persist-text-scale.el"
        :rev :newest)
   :custom
+  ;; Time interval, in seconds, between automatic saves of text scale data.
+  ;; If set to an integer value, enables periodic autosaving of persisted text
+  ;; scale information at the specified interval.
+  ;; If set to nil, disables timer-based autosaving entirely.
   (persist-text-scale-autosave-interval (* 7 60))
   :config
   (persist-text-scale-mode))
@@ -71,7 +79,12 @@ Here is how to install *persist-text-scale* on Doom Emacs:
 ```elisp
 ;; TODO: Load the mode here
 (after! persist-text-scale
+  ;; Time interval, in seconds, between automatic saves of text scale data.
+  ;; If set to an integer value, enables periodic autosaving of persisted text
+  ;; scale information at the specified interval.
+  ;; If set to nil, disables timer-based autosaving entirely.
   (setq persist-text-scale-autosave-interval (* 7 60))
+
   (persist-text-scale-mode))
 ```
 
