@@ -126,8 +126,7 @@ Without this, renaming a file resets the text scale."
 ;;; Variables
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
-(defvar persist-text-scale-depth-find-file-hook -99)
-(defvar persist-text-scale-depth-text-scale-mode 99)
+(defvar persist-text-scale-depth-text-scale-mode -99)
 
 ;;; Internal variables
 
@@ -139,17 +138,20 @@ Without this, renaming a file resets the text scale."
 This value reflects the numeric text scale adjustment applied in the last
 interactive text scale change and is used internally to support restoration.")
 
-(defvar persist-text-scale--timer nil)
-
 (defvar-local persist-text-scale--restored-amount nil
   "Non-nil indicates that the buffer text scale has been restored.
 This value is set by `persist-text-scale-restore'")
+
 (defvar-local persist-text-scale--persisted-amount nil
   "Non-nil indicates that the buffer text scale has been persisted.
 This value is set by `persist-text-scale-persist'.")
+
 (defvar-local persist-text-scale--filename nil
   "This is used to handle renames.")
+
 (defvar-local persist-text-scale--indirect-buffer-initialized nil)
+
+(defvar persist-text-scale--timer nil)
 
 ;;; Internal functions and macros
 
@@ -302,13 +304,13 @@ OBJECT can be a frame or a window."
           (with-selected-window window
             (when-let* ((buffer (window-buffer)))
               (with-current-buffer buffer
-                ;; (when (and (buffer-base-buffer)
-                ;;            (not persist-text-scale--indirect-buffer-initialized))
-                ;;   (when (bound-and-true-p text-scale-mode-amount)
-                ;;     (setq persist-text-scale--restored-amount text-scale-mode-amount)
-                ;;     (setq persist-text-scale--persisted-amount nil)
-                ;;     (persist-text-scale-persist))
-                ;;   (setq persist-text-scale--indirect-buffer-initialized t))
+                (when (and (buffer-base-buffer)
+                           (not persist-text-scale--indirect-buffer-initialized))
+                  (when (bound-and-true-p text-scale-mode-amount)
+                    (setq persist-text-scale--restored-amount text-scale-mode-amount)
+                    (setq persist-text-scale--persisted-amount nil)
+                    (persist-text-scale-persist))
+                  (setq persist-text-scale--indirect-buffer-initialized t))
 
                 ;; Restore all windows
                 (persist-text-scale--restore-all-windows)))))))))
@@ -329,7 +331,40 @@ including indirect buffers or buffers within the same category."
     ;; or other buffers of the same category)
     (persist-text-scale--restore-all-windows)))
 
-;;; Functions
+(defun persist-text-scale--handle-file-renames ()
+  "Handle file renames."
+  (when persist-text-scale-handle-file-renames
+    (when-let* ((filename (buffer-file-name (buffer-base-buffer))))
+      (cond
+       (persist-text-scale--filename
+        (let ((new-filename (file-truename filename)))
+          (unless (string= persist-text-scale--filename filename)
+            (persist-text-scale--verbose-message
+             "Persisting text scale settings due to file rename: %s -> %s"
+             persist-text-scale--filename new-filename)
+            (setq persist-text-scale--persisted-amount nil)
+            (persist-text-scale-persist))))
+
+       (t
+        (setq persist-text-scale--filename (file-truename filename)))))))
+
+(defun persist-text-scale--sort ()
+  "Sort `persist-text-scale--data' using atime."
+  (setq persist-text-scale--data
+        (sort persist-text-scale--data
+              (lambda (entry1 entry2)
+                (let ((atime1 (cdr (assoc 'atime (cdr entry1))))
+                      (atime2 (cdr (assoc 'atime (cdr entry2)))))
+                  (cond
+                   ;; Compare atime1 and atime2
+                   ((and atime1 atime2)
+                    (< atime1 atime2))
+                   ;; If atime1 is nil, put entry1 after entry2
+                   ((not atime1)
+                    t)
+                   ;; If atime2 is nil, put entry2 after entry1
+                   ((not atime2)
+                    nil)))))))
 
 (defun persist-text-scale--buffer-name-suffix-number (buffer-name)
   "Extract the number at the end of BUFFER-NAME (e.g., \='name<2>\=').
@@ -337,6 +372,8 @@ Return an empty string if no number is found."
   (if (string-match "<\\([0-9]+\\)>$" buffer-name)
       (match-string 1 buffer-name)
     ""))
+
+;;; Functions
 
 (defun persist-text-scale-persist ()
   "Save the current text scale for the current buffer.
@@ -379,23 +416,6 @@ alist."
               (push (cons buffer-category new-data) persist-text-scale--data))
 
             (setq persist-text-scale--persisted-amount text-scale-mode-amount))))))))
-
-(defun persist-text-scale--handle-file-renames ()
-  "Handle file renames."
-  (when persist-text-scale-handle-file-renames
-    (when-let* ((filename (buffer-file-name (buffer-base-buffer))))
-      (cond
-       (persist-text-scale--filename
-        (let ((new-filename (file-truename filename)))
-          (unless (string= persist-text-scale--filename filename)
-            (persist-text-scale--verbose-message
-             "Persisting text scale settings due to file rename: %s -> %s"
-             persist-text-scale--filename new-filename)
-            (setq persist-text-scale--persisted-amount nil)
-            (persist-text-scale-persist))))
-
-       (t
-        (setq persist-text-scale--filename (file-truename filename)))))))
 
 (defun persist-text-scale-restore ()
   "Restore the text scale for the current buffer."
@@ -468,24 +488,6 @@ This function writes the text scale data to the file specified by
 (defun persist-text-scale-load-file ()
   "Load data from `persist-text-scale-file'."
   (load persist-text-scale-file t t t))
-
-(defun persist-text-scale--sort ()
-  "Sort `persist-text-scale--data' using atime."
-  (setq persist-text-scale--data
-        (sort persist-text-scale--data
-              (lambda (entry1 entry2)
-                (let ((atime1 (cdr (assoc 'atime (cdr entry1))))
-                      (atime2 (cdr (assoc 'atime (cdr entry2)))))
-                  (cond
-                   ;; Compare atime1 and atime2
-                   ((and atime1 atime2)
-                    (< atime1 atime2))
-                   ;; If atime1 is nil, put entry1 after entry2
-                   ((not atime1)
-                    t)
-                   ;; If atime2 is nil, put entry2 after entry1
-                   ((not atime2)
-                    nil)))))))
 
 (defun persist-text-scale-cleanup ()
   "Delete old entries."
