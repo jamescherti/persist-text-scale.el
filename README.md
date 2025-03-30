@@ -15,11 +15,9 @@ This category-based behavior can be further customized by assigning a function t
 ## Features
 
 - Lightweight and efficient, requiring minimal configuration.
-- Automatically persists and restores the text scale for all buffers.
-- Periodically autosaves at intervals defined by `persist-text-scale-autosave-interval` (can be set to `nil` to disable or specified in seconds to enable).
-- Supports unified text scaling across buffer categories.
-- Offers fully customizable logic for categorizing buffers based on text scale.
-- Enables custom buffer categorization by specifying a function for the `persist-text-scale-buffer-category-function` variable, ensuring that groups of buffers share the same persisted and restored text scale.
+- Automatically saves and restores the text scale for all buffer types, including file, indirect, dired, and special buffers.
+- Periodically saves text scale data at intervals defined by `persist-text-scale-autosave-interval`, which can be set to `nil` to disable or specified in seconds to enable.
+- Provides unified text scaling across buffer categories, with fully customizable logic for categorizing buffers based on text scale. Users can customize categorization by specifying a function for the `persist-text-scale-buffer-category-function` variable, ensuring that groups of buffers maintain consistent text scale persistence and restoration.
 - The user can define the maximum number of retained entries using `persist-text-scale-history-length`.
 
 ## Installation
