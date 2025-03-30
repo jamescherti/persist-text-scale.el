@@ -222,10 +222,13 @@ Returns a unique identifier string based."
         nil
       result)))
 
-(defun persist-text-scale--get-amount ()
+(defun persist-text-scale--get-amount (&optional category)
   "Return the text scale amount for the current buffer category.
+CATEGORY is the buffer category.
 If the buffer category is nil or no scale amount has been stored, return nil."
-  (when-let* ((category (persist-text-scale--buffer-category)))
+  (unless category
+    (setq category (persist-text-scale--buffer-category)))
+  (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
                         ;; TODO: Only for non-special buffers
                         ;; persist-text-scale--last-text-scale-amount
@@ -365,7 +368,7 @@ alist."
   (when (or (not persist-text-scale-restore-once)
             (not persist-text-scale--restored-amount))
     (when-let* ((buffer-category (persist-text-scale--buffer-category)))
-      (when-let* ((amount (persist-text-scale--get-amount)))
+      (when-let* ((amount (persist-text-scale--get-amount buffer-category)))
         (if (and (bound-and-true-p text-scale-mode-amount)
                  (= amount text-scale-mode-amount))
             ;; Ignore
