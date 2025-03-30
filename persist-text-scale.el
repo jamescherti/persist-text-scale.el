@@ -294,10 +294,11 @@ OBJECT can be a frame or a window."
   "Hook function triggered by `text-scale-mode-hook'.
 Persists the current text scale and updates all relevant windows,
 including indirect buffers or buffers within the same category."
+  (persist-text-scale-persist)
+
   ;; Remove the function from text-scale-mode-hook to avoid infinite recursion
   (let ((text-scale-mode-hook (delq 'persist-text-scale--text-scale-mode-hook
                                     (copy-sequence text-scale-mode-hook))))
-    (persist-text-scale-persist)
     ;; Ensure other windows are updated (e.g., indirect buffers
     ;; or other buffers of the same category)
     (persist-text-scale--restore-all-windows)))
