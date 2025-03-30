@@ -397,7 +397,7 @@ alist."
 
 This function writes the text scale data to the file specified by
 `persist-text-scale-file', preserving the state for future sessions."
-  ;; (persist-text-scale-cleanup)
+  (persist-text-scale-cleanup)
   (with-temp-buffer
     (insert ";; -*- mode: emacs-lisp; coding: utf-8-unix -*-\n")
     (insert (concat ";; Persist Text Scale file, automatically generated "
@@ -425,7 +425,7 @@ This function writes the text scale data to the file specified by
 
 (defun persist-text-scale-cleanup (&optional threshold)
   "Delete entries where the mtime is older than THRESHOLD seconds."
-  (let ((time (current-time)))
+  (let ((time (float-time (current-time))))
     (unless threshold
       (setq threshold persist-text-scale-cleanup-threshold))
     (setq persist-text-scale--data
