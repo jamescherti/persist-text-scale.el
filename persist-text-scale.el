@@ -353,12 +353,26 @@ including indirect buffers or buffers within the same category."
   (setq persist-text-scale--data
         (sort persist-text-scale--data
               (lambda (entry1 entry2)
-                (setq entry1 (cdr entry1))
-                (setq entry2 (cdr entry2))
+                (setq entry1 (when (consp entry1)
+                               (cdr entry1)))
+                (setq entry2 (when (consp entry2)
+                               (cdr entry2)))
                 (let ((atime1 (when (listp entry1)
-                                (cdr (assoc 'atime entry1))))
+                                (let ((value (cdr (assoc 'atime entry1))))
+                                  (unless value
+                                    ;; Backward compatibility
+                                    (setq value (cdr (assoc 'mtime entry1)))
+                                    (when (consp value)
+                                      (setq value (float-time value))))
+                                  value)))
                       (atime2 (when (listp entry2)
-                                (cdr (assoc 'atime entry2)))))
+                                (let ((value (cdr (assoc 'atime entry2))))
+                                  (unless value
+                                    ;; Backward compatibility
+                                    (setq value (cdr (assoc 'mtime entry2)))
+                                    (when (consp value)
+                                      (setq value (float-time value))))
+                                  value))))
                   (cond
                    ;; Compare atime1 and atime2
                    ((and atime1 atime2)
