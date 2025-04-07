@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 James Cherti | https://www.jamescherti.com/contact/
 
 ;; Author: James Cherti
-;; Version: 1.0.1
+;; Version: 1.0.2
 ;; URL: https://github.com/jamescherti/persist-text-scale.el
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "24.1"))
