@@ -204,6 +204,13 @@ Returns a unique identifier string based."
                          buffer-name)
                         (file-truename file-name)))
 
+                      ;; Special modes whose major-modes are in the same
+                      ;; category
+                      ((and (boundp 'major-mode)
+                            (derived-mode-p 'help-mode))
+                       (let ((major-mode-symbol (symbol-name major-mode)))
+                         (format "mm:%s" major-mode-symbol)))
+
                       ;; File visiting buffers
                       (file-name
                        (format "f:%s" (file-truename file-name)))
