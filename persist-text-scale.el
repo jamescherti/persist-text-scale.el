@@ -128,6 +128,9 @@ Without this, renaming a file resets the text scale."
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
 (defvar persist-text-scale-depth-text-scale-mode -99)
 
+(defvar persist-text-scale-default-text-scale-amount nil
+  "Fallback text scale amount used when no value is available for restoration.")
+
 ;;; Internal variables
 
 (defvar persist-text-scale--data nil
@@ -254,7 +257,9 @@ If the buffer category is nil or no scale amount has been stored, return nil."
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
                         ;; TODO: Only for non-special buffers
                         ;; persist-text-scale--last-text-scale-amount
-                        )))
+                        (when (integerp
+                               persist-text-scale-default-text-scale-amount)
+                          persist-text-scale-default-text-scale-amount))))
       (cond
        ((listp cat-data)
         (cdr (assoc 'text-scale-amount cat-data)))
