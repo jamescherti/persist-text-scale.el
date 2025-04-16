@@ -210,7 +210,8 @@ Returns a unique identifier string based."
                       ;; Special modes whose major-modes are in the same
                       ;; category
                       ((and (boundp 'major-mode)
-                            (derived-mode-p 'help-mode))
+                            (or (derived-mode-p 'woman-mode)
+                                (derived-mode-p 'help-mode)))
                        (let ((major-mode-symbol (symbol-name major-mode)))
                          (format "mm:%s" major-mode-symbol)))
 
