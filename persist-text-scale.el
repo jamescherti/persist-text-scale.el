@@ -207,6 +207,11 @@ Returns a unique identifier string based."
                          buffer-name)
                         (file-truename file-name)))
 
+                      ;; Mini buffers
+                      ((and (not file-name)
+                            (or (string-prefix-p " *Minibuf" buffer-name)))
+                       "sp: *Minibuf")
+
                       ;; Special modes whose major-modes are in the same
                       ;; category
                       ((and (boundp 'major-mode)
@@ -542,6 +547,8 @@ This function writes the text scale data to the file specified by
         (persist-text-scale-load-file)
         (persist-text-scale--manage-timer)
         (add-hook 'kill-emacs-hook #'persist-text-scale-save-file)
+
+        (add-hook 'minibuffer-setup-hook #'persist-text-scale-restore)
 
         (add-hook 'window-buffer-change-functions
                   #'persist-text-scale--window-buffer-change-functions
