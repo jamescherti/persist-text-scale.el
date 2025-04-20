@@ -502,11 +502,11 @@ This function writes the text scale data to the file specified by
   (persist-text-scale-cleanup)
   (with-temp-buffer
     (insert ";; -*- mode: emacs-lisp; coding: utf-8-unix -*-\n")
-    (insert (concat ";; Persist Text Scale file, automatically generated "
-                    "by ‘persist-text-scale’.\n"))
+    (insert ";; Persist Text Scale file, automatically generated "
+            "by ‘persist-text-scale’.\n")
 
     (insert "(setq persist-text-scale--data ")
-    (unless (eq persist-text-scale--data nil)
+    (when persist-text-scale--data
       (insert "'"))
     (prin1 persist-text-scale--data (current-buffer))
     (insert ")\n\n")
