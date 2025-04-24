@@ -24,7 +24,7 @@ This category-based behavior can be further customized by assigning a function t
 
 ## Installation
 
-## Emacs
+### Emacs
 
 To install *persist-text-scale* from MELPA:
 
@@ -45,7 +45,7 @@ To install *persist-text-scale* from MELPA:
   (persist-text-scale-mode))
 ```
 
-## Alternative: Doom Emacs
+### Alternative: Doom Emacs
 
 Here is how to install *persist-text-scale* on Doom Emacs:
 
