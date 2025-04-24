@@ -1,5 +1,7 @@
 # persist-text-scale.el - Persist and Restore the Text Scale
 ![Build Status](https://github.com/jamescherti/persist-text-scale.el/actions/workflows/ci.yml/badge.svg)
+[![MELPA](https://melpa.org/packages/persist-text-scale-badge.svg)](https://melpa.org/#/persist-text-scale)
+[![MELPA Stable](https://stable.melpa.org/packages/persist-text-scale-badge.svg)](https://stable.melpa.org/#/persist-text-scale)
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
 ![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
 
@@ -22,19 +24,17 @@ This category-based behavior can be further customized by assigning a function t
 
 ## Installation
 
-### Emacs: Install with straight (Emacs version < 30)
+## Emacs
 
-To install *persist-text-scale* with `straight.el`:
+To install *persist-text-scale* from MELPA:
 
-1. It if hasn't already been done, [add the straight.el bootstrap code](https://github.com/radian-software/straight.el?tab=readme-ov-file#getting-started) to your init file.
-2. Add the following code to the Emacs init file:
+1. If you haven't already done so, [add MELPA repository to your Emacs configuration](https://melpa.org/#/getting-started).
+
+2. Add the following code to your Emacs init file to install *persist-text-scale* from MELPA:
+
 ```emacs-lisp
 (use-package persist-text-scale
   :ensure t
-  :straight (persist-text-scale
-             :type git
-             :host github
-             :repo "jamescherti/persist-text-scale.el")
   :custom
   ;; Time interval, in seconds, between automatic saves of text scale data.
   ;; If set to an integer value, enables periodic autosaving of persisted text
@@ -45,34 +45,13 @@ To install *persist-text-scale* with `straight.el`:
   (persist-text-scale-mode))
 ```
 
-### Emacs: Installing with use-package and :vc (Built-in feature in Emacs version >= 30)
-
-To install *persist-text-scale* with `use-package` and `:vc` (Emacs >= 30):
-
-``` emacs-lisp
-(use-package persist-text-scale
-  :ensure t
-  :vc (:url "https://github.com/jamescherti/persist-text-scale.el"
-       :rev :newest)
-  :custom
-  ;; Time interval, in seconds, between automatic saves of text scale data.
-  ;; If set to an integer value, enables periodic autosaving of persisted text
-  ;; scale information at the specified interval.
-  ;; If set to nil, disables timer-based autosaving entirely.
-  (persist-text-scale-autosave-interval (* 7 60))
-  :config
-  (persist-text-scale-mode))
-```
-
-## Doom Emacs
+## Alternative: Doom Emacs
 
 Here is how to install *persist-text-scale* on Doom Emacs:
 
 1. Add to the `~/.doom.d/packages.el` file:
 ```elisp
-(package! persist-text-scale
- :recipe
- (:host github :repo "jamescherti/persist-text-scale.el"))
+(package! persist-text-scale)
 ```
 
 2. Add to `~/.doom.d/config.el`:
