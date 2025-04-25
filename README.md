@@ -83,6 +83,7 @@ This program is free software: you can redistribute it and/or modify it under th
 ## Links
 
 - [persist-text-scale.el @GitHub](https://github.com/jamescherti/persist-text-scale.el)
+- [persist-text-scale.el @MELPA](https://melpa.org/#/persist-text-scale)
 - [Text Scale (Emacs documentation)](https://www.gnu.org/software/emacs/manual/html_node/emacs/Text-Scale.html)
 
 Other Emacs packages by the same author:
