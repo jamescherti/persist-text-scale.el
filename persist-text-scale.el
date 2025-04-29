@@ -196,7 +196,8 @@ Returns a unique identifier string based."
                           (buffer-name (buffer-name)))
                      (cond
                       ;; Ignore old buffers
-                      ((string-prefix-p " *Old buffer" buffer-name)
+                      ((or (string-prefix-p " *Old buffer" buffer-name)
+                           (string-prefix-p " *corfu" buffer-name))
                        :ignore)
 
                       ;; File visiting indirect buffers
