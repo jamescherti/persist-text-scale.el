@@ -502,7 +502,8 @@ This function writes the text scale data to the file specified by
 `persist-text-scale-file', preserving the state for future sessions."
   (persist-text-scale-cleanup)
   (with-temp-buffer
-    (insert ";; -*- mode: emacs-lisp; coding: utf-8-unix -*-\n")
+    (insert
+     ";; -*- mode: emacs-lisp; lexical-binding: t; coding: utf-8-unix -*-\n")
     (insert ";; Persist Text Scale file, automatically generated "
             "by ‘persist-text-scale’.\n")
 
