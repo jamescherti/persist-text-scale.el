@@ -160,6 +160,7 @@ This value is set by `persist-text-scale-persist'.")
 
 (defmacro persist-text-scale--verbose-message (&rest args)
   "Display a verbose message with the same ARGS arguments as `message'."
+  (declare (indent 0) (debug t))
   `(progn
      (when persist-text-scale-verbose
        (message (concat "[persist-text-scale] " ,(car args)) ,@(cdr args)))))
