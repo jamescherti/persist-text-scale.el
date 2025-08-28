@@ -263,8 +263,8 @@ If the buffer category is nil or no scale amount has been stored, return nil."
     (setq category (persist-text-scale--buffer-category)))
   (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
-                        ;; TODO: Only for non-special buffers
-                        ;; persist-text-scale--last-text-scale-amount
+                        ;; TODO store this per category intead
+                        persist-text-scale--last-text-scale-amount
                         (when (integerp
                                persist-text-scale-default-text-scale-amount)
                           persist-text-scale-default-text-scale-amount))))
@@ -337,8 +337,8 @@ OBJECT can be a frame or a window."
 
 (defun persist-text-scale--text-scale-mode-hook ()
   "Hook function triggered by `text-scale-mode-hook'.
-Persists the current text scale and updates all relevant windows,
-including indirect buffers or buffers within the same category."
+Persists the current text scale and updates all relevant windows, including
+indirect buffers or buffers within the same category."
   (persist-text-scale-persist)
 
   (setq persist-text-scale--last-text-scale-amount
@@ -360,8 +360,8 @@ including indirect buffers or buffers within the same category."
         (let ((new-filename (file-truename filename)))
           (unless (string= persist-text-scale--filename filename)
             (persist-text-scale--verbose-message
-             "Persisting text scale settings due to file rename: %s -> %s"
-             persist-text-scale--filename new-filename)
+              "Persisting text scale settings due to file rename: %s -> %s"
+              persist-text-scale--filename new-filename)
             (setq persist-text-scale--persisted-amount nil)
             (persist-text-scale-persist))))
 
@@ -422,26 +422,26 @@ alist."
     (cond
      ((not (bound-and-true-p text-scale-mode-amount))
       (persist-text-scale--verbose-message
-       "IGNORE (text-scale-mode-disabled): Persist '%s': %s"
-       (buffer-name) text-scale-mode-amount))
+        "IGNORE (text-scale-mode-disabled): Persist '%s': %s"
+        (buffer-name) text-scale-mode-amount))
 
      ((and (bound-and-true-p persist-text-scale--persisted-amount)
            (= text-scale-mode-amount persist-text-scale--persisted-amount))
       (persist-text-scale--verbose-message
-       "IGNORE (up-to-date): Persist '%s': %s"
-       (buffer-name) text-scale-mode-amount))
+        "IGNORE (up-to-date): Persist '%s': %s"
+        (buffer-name) text-scale-mode-amount))
 
      (t
       (let ((buffer-category (persist-text-scale--buffer-category)))
         (if (not buffer-category)
             ;; No category
             (persist-text-scale--verbose-message
-             "IGNORE (:ignore category): Persist '%s': %s: %s"
-             (buffer-name) buffer-category text-scale-mode-amount)
+              "IGNORE (:ignore category): Persist '%s': %s: %s"
+              (buffer-name) buffer-category text-scale-mode-amount)
           ;; Category found
           (persist-text-scale--verbose-message
-           "Persist '%s': %s: %s"
-           (buffer-name) buffer-category text-scale-mode-amount)
+            "Persist '%s': %s: %s"
+            (buffer-name) buffer-category text-scale-mode-amount)
 
           (let ((cons-value (when (and persist-text-scale--data
                                        buffer-category)
@@ -468,11 +468,11 @@ alist."
                  (= amount text-scale-mode-amount))
             ;; Ignore
             (persist-text-scale--verbose-message
-             (concat "IGNORED (up-to-date): Restore '%s': %s: %s")
-             (buffer-name) buffer-category amount)
+              (concat "IGNORED (up-to-date): Restore '%s': %s: %s")
+              (buffer-name) buffer-category amount)
           ;; Restore
           (persist-text-scale--verbose-message
-           "Restore '%s': %s: %s" (buffer-name) buffer-category amount)
+            "Restore '%s': %s: %s" (buffer-name) buffer-category amount)
           (text-scale-set amount)
           (setq persist-text-scale--restored-amount amount)
 
