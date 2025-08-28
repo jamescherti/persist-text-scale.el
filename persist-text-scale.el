@@ -66,7 +66,7 @@ It can be customized to a different file path as needed."
   :type 'file
   :group 'persist-text-scale)
 
-(defcustom persist-text-scale-autosave-interval (* 7 60)
+(defcustom persist-text-scale-autosave-interval (* 11 60)
   "Time interval, in seconds, between automatic saves of text scale data.
 If set to an integer value, enables periodic autosaving of persisted text scale
 information at the specified interval.
@@ -123,6 +123,13 @@ Without this, renaming a file resets the text scale."
   :type 'boolean
   :group 'persist-text-scale)
 
+(defcustom persist-text-scale-fallback-to-previous-scale t
+  "When non-nil, use the previous text scale amount.
+The previous text scale amount is applied when no scale is defined for the
+current category."
+  :type 'boolean
+  :group 'persist-text-scale)
+
 ;;; Variables
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
@@ -140,6 +147,8 @@ Without this, renaming a file resets the text scale."
   "Most recent text scale amount selected by the user.
 This value reflects the numeric text scale adjustment applied in the last
 interactive text scale change and is used internally to support restoration.")
+
+(defvar-local persist-text-scale--update-last-text-scale-amount t)
 
 (defvar-local persist-text-scale--restored-amount nil
   "Non-nil indicates that the buffer text scale has been restored.
@@ -264,7 +273,8 @@ If the buffer category is nil or no scale amount has been stored, return nil."
   (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
                         ;; TODO store this per category intead
-                        persist-text-scale--last-text-scale-amount
+                        (when persist-text-scale-fallback-to-previous-scale
+                          persist-text-scale--last-text-scale-amount)
                         (when (integerp
                                persist-text-scale-default-text-scale-amount)
                           persist-text-scale-default-text-scale-amount))))
@@ -341,8 +351,10 @@ Persists the current text scale and updates all relevant windows, including
 indirect buffers or buffers within the same category."
   (persist-text-scale-persist)
 
-  (setq persist-text-scale--last-text-scale-amount
-        text-scale-mode-amount)
+  (when persist-text-scale--update-last-text-scale-amount
+    (message "UPDATE text scale") ;; TODO remove
+    (setq persist-text-scale--last-text-scale-amount
+          text-scale-mode-amount))
 
   ;; Remove the function from text-scale-mode-hook to avoid infinite recursion
   (let ((text-scale-mode-hook (delq 'persist-text-scale--text-scale-mode-hook
@@ -457,33 +469,34 @@ alist."
 
 (defun persist-text-scale-restore ()
   "Restore the text scale for the current buffer."
-  ;; Handle renames
-  (persist-text-scale--handle-file-renames)
+  (let ((persist-text-scale--update-last-text-scale-amount nil))
+    ;; Handle renames
+    (persist-text-scale--handle-file-renames)
 
-  (when (or (not persist-text-scale-restore-once)
-            (not persist-text-scale--restored-amount))
-    (when-let* ((buffer-category (persist-text-scale--buffer-category)))
-      (when-let* ((amount (persist-text-scale--get-amount buffer-category)))
-        (if (and (bound-and-true-p text-scale-mode-amount)
-                 (= amount text-scale-mode-amount))
-            ;; Ignore
+    (when (or (not persist-text-scale-restore-once)
+              (not persist-text-scale--restored-amount))
+      (when-let* ((buffer-category (persist-text-scale--buffer-category)))
+        (when-let* ((amount (persist-text-scale--get-amount buffer-category)))
+          (if (and (bound-and-true-p text-scale-mode-amount)
+                   (= amount text-scale-mode-amount))
+              ;; Ignore
+              (persist-text-scale--verbose-message
+                (concat "IGNORED (up-to-date): Restore '%s': %s: %s")
+                (buffer-name) buffer-category amount)
+            ;; Restore
             (persist-text-scale--verbose-message
-              (concat "IGNORED (up-to-date): Restore '%s': %s: %s")
-              (buffer-name) buffer-category amount)
-          ;; Restore
-          (persist-text-scale--verbose-message
-            "Restore '%s': %s: %s" (buffer-name) buffer-category amount)
-          (text-scale-set amount)
-          (setq persist-text-scale--restored-amount amount)
+              "Restore '%s': %s: %s" (buffer-name) buffer-category amount)
+            (text-scale-set amount)
+            (setq persist-text-scale--restored-amount amount)
 
-          ;; Update atime after restore
-          (let ((cons-value (when persist-text-scale--data
-                              (assoc buffer-category
-                                     persist-text-scale--data)))
-                (new-data (list (cons 'text-scale-amount amount)
-                                (cons 'atime (float-time (current-time))))))
-            (when cons-value
-              (setcdr cons-value new-data))))))))
+            ;; Update atime after restore
+            (let ((cons-value (when persist-text-scale--data
+                                (assoc buffer-category
+                                       persist-text-scale--data)))
+                  (new-data (list (cons 'text-scale-amount amount)
+                                  (cons 'atime (float-time (current-time))))))
+              (when cons-value
+                (setcdr cons-value new-data)))))))))
 
 (defun persist-text-scale-reset ()
   "Reset the text scale for all buffer categories."

@@ -14,6 +14,8 @@ This package also facilitates grouping buffers into categories, allowing buffers
 
 This category-based behavior can be further customized by assigning a function to the `persist-text-scale-buffer-category-function` variable. The function determines how buffers are categorized by returning a category identifier (string) based on the buffer's context. Buffers within the same category will share the same text scale.
 
+If this enhances your workflow, please show your support by **⭐ starring persist-text-scale on GitHub** to help more Emacs users discover its benefits.
+
 ## Features
 
 - Lightweight and efficient, requiring minimal configuration.
@@ -71,6 +73,101 @@ Here is how to install *persist-text-scale* on Doom Emacs:
 ```
 doom sync
 ```
+
+## Customizations
+
+### `persist-text-scale-autosave-interval`
+
+- **Type:** Integer or `nil`
+- **Default:** `(* 11 60)` seconds (11 minutes)
+
+Defines the time interval, in seconds, between automatic saves of text scale data.
+
+- Setting an integer enables periodic autosaving at the specified interval.
+- Setting it to `nil` disables timer-based autosaving entirely.
+
+This ensures that text scale adjustments are preserved automatically without requiring manual saving.
+
+### `persist-text-scale-history-length`
+
+- **Type:** Integer or `nil`
+- **Default:** `100`
+
+Specifies the maximum number of entries to retain. Each entry corresponds to a buffer category (e.g., file-visiting buffers, special buffers).
+
+- If set to an integer, older entries are deleted once the limit is reached.
+- If set to `nil`, cleanup is disabled and no entries are removed. **(not recommended)**
+
+This helps manage memory usage and prevents the data file from growing indefinitely.
+
+### `persist-text-scale-buffer-category-function`
+
+- **Type:** Function or `nil`
+- **Default:** `nil`
+
+Allows custom classification of buffers for text scale persistence. When provided, this function overrides the default classification.
+
+Here is an example:
+```elisp
+(defun my-persist-text-scale-function ()
+    (let ((buffer-name (buffer-name)))
+      (cond
+       ((string-prefix-p "*Embark Export:" buffer-name)
+        "category:embark-export")
+
+       ((string-prefix-p "*sdcv:" buffer-name)
+        "category:sdcv"))))
+
+(setq persist-text-scale-buffer-category-function 'my-persist-text-scale-function)
+```
+
+The function must return one of:
+
+* A string or symbol representing the buffer category (for grouping purposes),
+* `:ignore` to exclude the buffer from persistence,
+* `nil` to defer to the default *persist-text-scale* classification.
+
+This option provides flexibility in defining how text scale settings are grouped and applied across different types of buffers.
+
+### `persist-text-scale-restore-once`
+
+- **Type:** Boolean
+- **Default:** `nil`
+
+Controls whether the text scale is restored only once per buffer.
+
+* When non-nil, the text scale is applied either when the buffer is first loaded or when it is displayed in a window for the first time.
+* Subsequent window changes or re-displays of the buffer do not trigger additional restorations.
+
+If you are unsure, it is recommended to leave this option as `nil` to allow normal repeated restoration behavior.
+
+### `persist-text-scale-handle-file-renames`
+
+- **Type:** Boolean
+- **Default:** `t`
+
+Determines whether text scale settings are preserved when a buffer’s underlying file is renamed.
+
+* When enabled, the buffer association is updated to the new file path, ensuring that the previously configured text scale remains applied.
+* When disabled, renaming a file resets its text scale to the default value.
+
+These options give users control over messaging, restoration frequency, and resilience to file renames, improving both usability and reliability of text scale persistence.
+
+### `persist-text-scale-fallback-to-previous-scale`
+
+* **Type:** boolean
+* **Default:** `t`
+
+The `persist-text-scale-fallback-to-previous-scale` option allows `persist-text-scale-mode` to use the last used text scale when a buffer category does not yet have a defined scale (i.e., the text scale for this category has never been changed).
+
+This is useful if you frequently switch between buffers or modes that have not been explicitly assigned a text scale, maintaining readability without manual adjustment.
+
+### `persist-text-scale-verbose`
+
+- **Type:** Boolean
+- **Default:** `nil`
+
+When enabled (`t`), `persist-text-scale` displays informative messages during text scale restoration. These messages indicate when and how the text scale was restored, which is useful for debugging or monitoring the package's behavior.
 
 ## Author and License
 
