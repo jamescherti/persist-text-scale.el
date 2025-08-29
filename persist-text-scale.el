@@ -352,7 +352,6 @@ indirect buffers or buffers within the same category."
   (persist-text-scale-persist)
 
   (when persist-text-scale--update-last-text-scale-amount
-    (message "UPDATE text scale") ;; TODO remove
     (setq persist-text-scale--last-text-scale-amount
           text-scale-mode-amount))
 
