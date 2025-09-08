@@ -3,7 +3,7 @@
 [![MELPA](https://melpa.org/packages/persist-text-scale-badge.svg)](https://melpa.org/#/persist-text-scale)
 [![MELPA Stable](https://stable.melpa.org/packages/persist-text-scale-badge.svg)](https://stable.melpa.org/#/persist-text-scale)
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
-![](https://raw.githubusercontent.com/jamescherti/persist-text-scale.el/main/.images/made-for-gnu-emacs.svg)
+![](https://jamescherti.com/misc/made-for-gnu-emacs.svg)
 
 The **persist-text-scale** Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs.
 
