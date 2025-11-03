@@ -545,7 +545,7 @@ This function writes the text scale data to the file specified by
 
 ;;;###autoload
 (define-minor-mode persist-text-scale-mode
-  "Toggle `persist-text-scale-mode'."
+  "Persist and restore text scale."
   :global t
   :lighter " PTScale"
   :group 'persist-text-scale
