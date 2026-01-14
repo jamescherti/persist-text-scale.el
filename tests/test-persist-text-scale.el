@@ -1,6 +1,6 @@
 ;;; test-persist-text-scale.el --- Test persist-text-scale -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2025 James Cherti | https://www.jamescherti.com/contact/
+;; Copyright (C) 2025-2026 James Cherti | https://www.jamescherti.com/contact/
 
 ;; Author: James Cherti
 ;; Version: 1.0.3
