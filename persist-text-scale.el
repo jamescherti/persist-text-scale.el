@@ -273,8 +273,8 @@ If the buffer category is nil or no scale amount has been stored, return nil."
   (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
                         ;; TODO store this per category intead
-                        (when persist-text-scale-fallback-to-previous-scale
-                          persist-text-scale--last-text-scale-amount)
+                        ;; (when persist-text-scale-fallback-to-previous-scale
+                        ;;   persist-text-scale--last-text-scale-amount)
                         (when (integerp
                                persist-text-scale-default-text-scale-amount)
                           persist-text-scale-default-text-scale-amount))))
@@ -332,18 +332,28 @@ OBJECT can be a frame or a window."
       (when (and frame window)
         (with-selected-frame frame
           (with-selected-window window
-            (when-let* ((buffer (window-buffer)))
-              (with-current-buffer buffer
-                (when (and (buffer-base-buffer)
-                           (not persist-text-scale--indirect-buffer-initialized))
-                  (when (bound-and-true-p text-scale-mode-amount)
-                    (setq persist-text-scale--restored-amount text-scale-mode-amount)
-                    (setq persist-text-scale--persisted-amount nil)
-                    (persist-text-scale-persist))
-                  (setq persist-text-scale--indirect-buffer-initialized t))
+            (let* ((buffer (window-buffer))
+                   (base-buffer-text-scale-amount
+                    (when (and buffer
+                               (bound-and-true-p text-scale-mode-amount))
+                      text-scale-mode-amount)))
+              (when buffer
+                (with-current-buffer buffer
+                  ;; TODO Fix this part
+                  ;; (let ((base-buffer (buffer-base-buffer)))
+                  ;;   ;; Indirect buffers
+                  ;;   (when (and
+                  ;;          base-buffer
+                  ;;          (not persist-text-scale--indirect-buffer-initialized))
+                  ;;     ;; when (bound-and-true-p text-scale-mode-amount)
+                  ;;     ;; (setq persist-text-scale--restored-amount text-scale-mode-amount)
+                  ;;     ;; (setq persist-text-scale--persisted-amount nil)
+                  ;;     (text-scale-set base-buffer-text-scale-amount)
+                  ;;     (persist-text-scale-persist)
+                  ;;     (setq persist-text-scale--indirect-buffer-initialized t)))
 
-                ;; Restore all windows
-                (persist-text-scale--restore-all-windows)))))))))
+                  ;; Restore all windows
+                  (persist-text-scale--restore-all-windows))))))))))
 
 (defun persist-text-scale--text-scale-mode-hook ()
   "Hook function triggered by `text-scale-mode-hook'.
