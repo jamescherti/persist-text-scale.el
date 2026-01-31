@@ -332,28 +332,10 @@ OBJECT can be a frame or a window."
       (when (and frame window)
         (with-selected-frame frame
           (with-selected-window window
-            (let* ((buffer (window-buffer))
-                   (base-buffer-text-scale-amount
-                    (when (and buffer
-                               (bound-and-true-p text-scale-mode-amount))
-                      text-scale-mode-amount)))
-              (when buffer
-                (with-current-buffer buffer
-                  ;; TODO Fix this part
-                  ;; (let ((base-buffer (buffer-base-buffer)))
-                  ;;   ;; Indirect buffers
-                  ;;   (when (and
-                  ;;          base-buffer
-                  ;;          (not persist-text-scale--indirect-buffer-initialized))
-                  ;;     ;; when (bound-and-true-p text-scale-mode-amount)
-                  ;;     ;; (setq persist-text-scale--restored-amount text-scale-mode-amount)
-                  ;;     ;; (setq persist-text-scale--persisted-amount nil)
-                  ;;     (text-scale-set base-buffer-text-scale-amount)
-                  ;;     (persist-text-scale-persist)
-                  ;;     (setq persist-text-scale--indirect-buffer-initialized t)))
-
-                  ;; Restore all windows
-                  (persist-text-scale--restore-all-windows))))))))))
+            (when-let* ((buffer (window-buffer)))
+              (with-current-buffer buffer
+                ;; Restore all windows
+                (persist-text-scale--restore-all-windows)))))))))
 
 (defun persist-text-scale--text-scale-mode-hook ()
   "Hook function triggered by `text-scale-mode-hook'.
