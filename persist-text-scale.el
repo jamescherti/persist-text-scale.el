@@ -129,13 +129,15 @@ current category."
   :type 'boolean
   :group 'persist-text-scale)
 
+(defcustom persist-text-scale-default-text-scale-amount nil
+  "Fallback text scale amount used when no value is available for restoration."
+  :type '(choice (const :tag "None" nil) integer)
+  :group 'persist-text-scale)
+
 ;;; Variables
 
 (defvar persist-text-scale-depth-window-buffer-change-functions -99)
 (defvar persist-text-scale-depth-text-scale-mode -99)
-
-(defvar persist-text-scale-default-text-scale-amount nil
-  "Fallback text scale amount used when no value is available for restoration.")
 
 ;;; Internal variables
 
@@ -269,7 +271,7 @@ If the buffer category is nil or no scale amount has been stored, return nil."
     (setq category (persist-text-scale--buffer-category)))
   (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
-                        ;; TODO store this per category intead
+                        ;; TODO store this per category instead
                         ;; (when persist-text-scale-fallback-to-previous-scale
                         ;;   persist-text-scale--last-text-scale-amount)
                         (when (integerp
