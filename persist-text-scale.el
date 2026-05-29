@@ -373,7 +373,8 @@ indirect buffers or buffers within the same category."
               "Persisting text scale settings due to file rename: %s -> %s"
               persist-text-scale--filename new-filename)
             (setq persist-text-scale--persisted-amount nil)
-            (persist-text-scale-persist))))
+            (persist-text-scale-persist)
+            (setq persist-text-scale--filename new-filename))))
 
        (t
         (setq persist-text-scale--filename (file-truename filename)))))))
@@ -383,34 +384,34 @@ indirect buffers or buffers within the same category."
   (setq persist-text-scale--data
         (sort persist-text-scale--data
               (lambda (entry1 entry2)
-                (setq entry1 (when (consp entry1)
-                               (cdr entry1)))
-                (setq entry2 (when (consp entry2)
-                               (cdr entry2)))
-                (let ((atime1 (when (listp entry1)
-                                (let ((value (cdr (assoc 'atime entry1))))
-                                  (unless value
-                                    ;; Backward compatibility
-                                    (setq value (cdr (assoc 'mtime entry1)))
-                                    (when (consp value)
-                                      (setq value (float-time value))))
-                                  value)))
-                      (atime2 (when (listp entry2)
-                                (let ((value (cdr (assoc 'atime entry2))))
-                                  (unless value
-                                    ;; Backward compatibility
-                                    (setq value (cdr (assoc 'mtime entry2)))
-                                    (when (consp value)
-                                      (setq value (float-time value))))
-                                  value))))
+                (let* ((data1 (when (consp entry1)
+                                (cdr entry1)))
+                       (data2 (when (consp entry2)
+                                (cdr entry2)))
+                       (atime1 (when (listp data1)
+                                 (let ((value (cdr (assoc 'atime data1))))
+                                   (unless value
+                                     ;; Backward compatibility
+                                     (setq value (cdr (assoc 'mtime data1)))
+                                     (when (consp value)
+                                       (setq value (float-time value))))
+                                   value)))
+                       (atime2 (when (listp data2)
+                                 (let ((value (cdr (assoc 'atime data2))))
+                                   (unless value
+                                     ;; Backward compatibility
+                                     (setq value (cdr (assoc 'mtime data2)))
+                                     (when (consp value)
+                                       (setq value (float-time value))))
+                                   value))))
                   (cond
                    ;; Compare atime1 and atime2
                    ((and atime1 atime2)
                     (< atime1 atime2))
-                   ;; If atime1 is nil, put entry1 after entry2
+                   ;; If atime1 is nil, put data1 after data2
                    ((not atime1)
                     t)
-                   ;; If atime2 is nil, put entry2 after entry1
+                   ;; If atime2 is nil, put data2 after entry1
                    ((not atime2)
                     nil)))))))
 
@@ -582,6 +583,8 @@ This function writes the text scale data to the file specified by
                   persist-text-scale-depth-text-scale-mode))
     (persist-text-scale--cancel-timer)
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save-file)
+
+    (remove-hook 'minibuffer-setup-hook #'persist-text-scale-restore)
 
     (remove-hook 'window-buffer-change-functions
                  #'persist-text-scale--window-buffer-change-functions)
