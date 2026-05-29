@@ -6,7 +6,7 @@
 ;; Version: 1.0.4
 ;; URL: https://github.com/jamescherti/persist-text-scale.el
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "27.1"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -136,13 +136,19 @@ current category."
 
 ;;; Variables
 
-(defvar persist-text-scale-depth-window-buffer-change-functions -99)
-(defvar persist-text-scale-depth-text-scale-mode -99)
+(defvar persist-text-scale-depth-window-buffer-change-functions -99
+  "Depth for `window-buffer-change-functions' hook.")
+
+(defvar persist-text-scale-depth-text-scale-mode -99
+  "Depth for `text-scale-mode-hook'.")
 
 ;;; Internal variables
 
 (defvar persist-text-scale--data nil
   "Alist mapping buffer identifiers to their corresponding text scale amount.")
+
+(defvar persist-text-scale--inhibit-hook nil
+  "Non-nil to inhibit `persist-text-scale' hook.")
 
 (defvar persist-text-scale--last-text-scale-amount nil
   "Most recent text scale amount selected by the user.
@@ -194,7 +200,7 @@ timer."
 
 (defun persist-text-scale--buffer-category ()
   "Generate a unique name for the current buffer.
-Returns a unique identifier string based."
+Returns a unique identifier string based on the buffer context."
   (let (result)
     (when persist-text-scale-buffer-category-function
       (setq result (funcall persist-text-scale-buffer-category-function)))
@@ -340,18 +346,20 @@ OBJECT can be a frame or a window."
   "Hook function triggered by `text-scale-mode-hook'.
 Persists the current text scale and updates all relevant windows, including
 indirect buffers or buffers within the same category."
-  (persist-text-scale-persist)
+  ;; This let-binding stops the direct infinite recursion.
+  ;; `persist-text-scale-restore' is not only called from the
+  ;; hook, it is also triggered by other window and buffer changes.
+  (unless persist-text-scale--inhibit-hook
+    (let ((persist-text-scale--inhibit-hook t))
+      (persist-text-scale-persist)
 
-  (when persist-text-scale--update-last-text-scale-amount
-    (setq persist-text-scale--last-text-scale-amount
-          text-scale-mode-amount))
+      (when persist-text-scale--update-last-text-scale-amount
+        (setq persist-text-scale--last-text-scale-amount
+              text-scale-mode-amount))
 
-  ;; Remove the function from text-scale-mode-hook to avoid infinite recursion
-  (let ((text-scale-mode-hook (delq 'persist-text-scale--text-scale-mode-hook
-                                    (copy-sequence text-scale-mode-hook))))
-    ;; Ensure other windows are updated (e.g., indirect buffers
-    ;; or other buffers of the same category)
-    (persist-text-scale--restore-all-windows)))
+      ;; Ensure other windows are updated (e.g., indirect buffers
+      ;; or other buffers of the same category)
+      (persist-text-scale--restore-all-windows))))
 
 (defun persist-text-scale--handle-file-renames ()
   "Handle file renames."
@@ -360,7 +368,7 @@ indirect buffers or buffers within the same category."
       (cond
        (persist-text-scale--filename
         (let ((new-filename (file-truename filename)))
-          (unless (string= persist-text-scale--filename filename)
+          (unless (string= persist-text-scale--filename new-filename)
             (persist-text-scale--verbose-message
               "Persisting text scale settings due to file rename: %s -> %s"
               persist-text-scale--filename new-filename)
@@ -459,7 +467,8 @@ alist."
 
 (defun persist-text-scale-restore ()
   "Restore the text scale for the current buffer."
-  (let ((persist-text-scale--update-last-text-scale-amount nil))
+  (let ((persist-text-scale--update-last-text-scale-amount nil)
+        (persist-text-scale--inhibit-hook t))
     ;; Handle renames
     (persist-text-scale--handle-file-renames)
 
@@ -476,7 +485,12 @@ alist."
             ;; Restore
             (persist-text-scale--verbose-message
               "Restore '%s': %s: %s" (buffer-name) buffer-category amount)
-            (text-scale-set amount)
+
+            ;; Temporarily disable hooks to prevent external packages
+            ;; from causing infinite recursion during silent restores.
+            (let ((text-scale-mode-hook nil))
+              (text-scale-set amount))
+
             (setq persist-text-scale--restored-amount amount)
 
             ;; Update atime after restore
