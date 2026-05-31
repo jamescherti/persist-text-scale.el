@@ -49,6 +49,7 @@
 ;;; Require
 
 (require 'face-remap)
+(eval-when-compile (require 'subr-x))
 
 ;;; Defcustom
 
@@ -537,37 +538,49 @@ alist."
   "Save the current text scale data to `persist-text-scale-file'.
 
 This function writes the text scale data to the file specified by
-`persist-text-scale-file', preserving the state for future sessions."
+`persist-text-scale-file', preserving the state for future sessions.
+It uses an atomic write strategy to prevent file corruption."
   (persist-text-scale-cleanup)
-  (let ((dir (file-name-directory persist-text-scale-file)))
+  (let* ((dir (file-name-directory persist-text-scale-file))
+         (temp-file (concat persist-text-scale-file ".tmp"))
+         success)
     (when dir
-      (make-directory dir t)))
+      (make-directory dir t))
 
-  (with-temp-buffer
-    (insert
-     ";; -*- mode: emacs-lisp; lexical-binding: t; coding: utf-8-unix -*-\n")
-    (insert ";; Persist Text Scale file, automatically generated "
-            "by `persist-text-scale'.\n")
+    (unwind-protect
+        (with-temp-buffer
+          (insert
+           ";; -*- mode: emacs-lisp; lexical-binding: t; coding: utf-8-unix -*-\n")
+          (insert ";; Persist Text Scale file, automatically generated "
+                  "by `persist-text-scale'.\n")
 
-    (insert "(setq persist-text-scale--data ")
-    (when persist-text-scale--data
-      (insert "'"))
-    (prin1 persist-text-scale--data (current-buffer))
-    (insert ")\n\n")
+          (insert "(setq persist-text-scale--data ")
+          (when persist-text-scale--data
+            (insert "'"))
+          (prin1 persist-text-scale--data (current-buffer))
+          (insert ")\n\n")
 
-    (insert "(setq persist-text-scale--last-text-scale-amount ")
-    (prin1 persist-text-scale--last-text-scale-amount (current-buffer))
-    (insert ")\n\n")
+          (insert "(setq persist-text-scale--last-text-scale-amount ")
+          (prin1 persist-text-scale--last-text-scale-amount (current-buffer))
+          (insert ")\n\n")
 
-    (let ((coding-system-for-write 'utf-8-emacs)
-          (write-region-annotate-functions nil)
-          (write-region-post-annotation-function nil))
-      (write-region
-       (point-min) (point-max) persist-text-scale-file nil 'silent))))
+          (let ((coding-system-for-write 'utf-8-emacs)
+                (write-region-annotate-functions nil)
+                (write-region-post-annotation-function nil))
+            (write-region
+             (point-min) (point-max) temp-file nil 'silent))
+          (setq success t))
+      (when success
+        (rename-file temp-file persist-text-scale-file t)))))
 
 (defun persist-text-scale-load-file ()
   "Load data from `persist-text-scale-file'."
-  (load persist-text-scale-file t t t))
+  (condition-case err
+      (load persist-text-scale-file t t t)
+    (error
+     (message "[persist-text-scale] Failed to load data file: %s"
+              (error-message-string err))
+     (setq persist-text-scale--data nil))))
 
 (defun persist-text-scale-cleanup ()
   "Delete old entries."
