@@ -529,8 +529,9 @@ This function writes the text scale data to the file specified by
 `persist-text-scale-file', preserving the state for future sessions.
 It uses an atomic write strategy to prevent file corruption."
   (persist-text-scale-cleanup)
-  (let* ((dir (file-name-directory persist-text-scale-file))
-         (temp-file (concat persist-text-scale-file ".tmp"))
+  (let* ((actual-file (expand-file-name persist-text-scale-file))
+         (dir (file-name-directory actual-file))
+         (temp-file (concat actual-file ".tmp"))
          success)
     (when dir
       (make-directory dir t))
@@ -558,8 +559,11 @@ It uses an atomic write strategy to prevent file corruption."
             (write-region
              (point-min) (point-max) temp-file nil 'silent))
           (setq success t))
-      (when success
-        (rename-file temp-file persist-text-scale-file t)))))
+      (if success
+          (rename-file temp-file actual-file t)
+        (ignore-errors
+          (when (file-exists-p temp-file)
+            (delete-file temp-file)))))))
 
 (defun persist-text-scale-load-file ()
   "Load data from `persist-text-scale-file'."
