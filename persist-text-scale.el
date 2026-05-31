@@ -592,6 +592,7 @@ When CONFIRM is non-nil, prompt for confirmation."
           (when persist-text-scale--restored-amount
             (setq persist-text-scale--persisted-amount nil)
             (setq persist-text-scale--restored-amount nil))
+          (setq persist-text-scale--filename nil)
           (setq persist-text-scale--checked nil))))
     (setq persist-text-scale--data nil)))
 
