@@ -522,18 +522,6 @@ alist."
                   (push (cons buffer-category new-data)
                         persist-text-scale--data))))))))))
 
-(defun persist-text-scale-reset ()
-  "Reset the text scale for all buffer categories."
-  (dolist (buf (buffer-list))
-    (when (buffer-live-p buf)
-      (with-current-buffer buf
-        (when persist-text-scale--restored-amount
-          (setq persist-text-scale--persisted-amount nil)
-          (setq persist-text-scale--restored-amount nil))
-        (setq persist-text-scale--checked nil))))
-
-  (setq persist-text-scale--data nil))
-
 (defun persist-text-scale-save-file ()
   "Save the current text scale data to `persist-text-scale-file'.
 
@@ -590,6 +578,19 @@ It uses an atomic write strategy to prevent file corruption."
           (last persist-text-scale--data persist-text-scale-history-length))))
 
 ;;; Mode
+
+;;;###autoload
+(defun persist-text-scale-reset ()
+  "Reset the text scale for all buffer categories."
+  (interactive)
+  (dolist (buf (buffer-list))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (when persist-text-scale--restored-amount
+          (setq persist-text-scale--persisted-amount nil)
+          (setq persist-text-scale--restored-amount nil))
+        (setq persist-text-scale--checked nil))))
+  (setq persist-text-scale--data nil))
 
 ;;;###autoload
 (define-minor-mode persist-text-scale-mode
