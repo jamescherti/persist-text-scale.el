@@ -277,9 +277,9 @@ If the buffer category is nil or no scale amount has been stored, return nil."
     (setq category (persist-text-scale--buffer-category)))
   (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
-                        ;; TODO store this per category instead
-                        ;; (when persist-text-scale-fallback-to-previous-scale
-                        ;;   persist-text-scale--last-text-scale-amount)
+                        (when (and persist-text-scale-fallback-to-previous-scale
+                                   persist-text-scale--last-text-scale-amount)
+                          persist-text-scale--last-text-scale-amount)
                         (when (integerp
                                persist-text-scale-default-text-scale-amount)
                           persist-text-scale-default-text-scale-amount))))
@@ -566,6 +566,7 @@ This function writes the text scale data to the file specified by
   :lighter " PTScale"
   :group 'persist-text-scale
   (if persist-text-scale-mode
+      ;; Enable
       (progn
         (persist-text-scale-load-file)
         (persist-text-scale--manage-timer)
@@ -581,6 +582,7 @@ This function writes the text scale data to the file specified by
         (add-hook 'text-scale-mode-hook
                   #'persist-text-scale--text-scale-mode-hook
                   persist-text-scale-depth-text-scale-mode))
+    ;; Disable
     (persist-text-scale--cancel-timer)
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save-file)
 
