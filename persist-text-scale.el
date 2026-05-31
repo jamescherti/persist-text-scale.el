@@ -580,17 +580,20 @@ It uses an atomic write strategy to prevent file corruption."
 ;;; Mode
 
 ;;;###autoload
-(defun persist-text-scale-reset ()
-  "Reset the text scale for all buffer categories."
-  (interactive)
-  (dolist (buf (buffer-list))
-    (when (buffer-live-p buf)
-      (with-current-buffer buf
-        (when persist-text-scale--restored-amount
-          (setq persist-text-scale--persisted-amount nil)
-          (setq persist-text-scale--restored-amount nil))
-        (setq persist-text-scale--checked nil))))
-  (setq persist-text-scale--data nil))
+(defun persist-text-scale-reset (&optional confirm)
+  "Reset the text scale for all buffer categories.
+When CONFIRM is non-nil, prompt for confirmation."
+  (interactive (list t))
+  (when (or (not confirm)
+            (y-or-n-p "Reset persist text scale data for all buffers? "))
+    (dolist (buf (buffer-list))
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (when persist-text-scale--restored-amount
+            (setq persist-text-scale--persisted-amount nil)
+            (setq persist-text-scale--restored-amount nil))
+          (setq persist-text-scale--checked nil))))
+    (setq persist-text-scale--data nil)))
 
 ;;;###autoload
 (define-minor-mode persist-text-scale-mode
