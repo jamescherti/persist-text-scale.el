@@ -142,6 +142,9 @@ current category."
 (defvar persist-text-scale-depth-text-scale-mode -99
   "Depth for `text-scale-mode-hook'.")
 
+(defvar persist-text-scale-depth-find-file -99
+  "Depth for `find-file-hook'.")
+
 ;;; Internal variables
 
 (defvar persist-text-scale--data nil
@@ -572,6 +575,9 @@ This function writes the text scale data to the file specified by
         (persist-text-scale--manage-timer)
         (add-hook 'kill-emacs-hook #'persist-text-scale-save-file)
 
+        (add-hook 'find-file-hook #'persist-text-scale-restore
+                  persist-text-scale-depth-find-file)
+
         (add-hook 'minibuffer-setup-hook #'persist-text-scale-restore)
 
         (add-hook 'window-buffer-change-functions
@@ -585,6 +591,8 @@ This function writes the text scale data to the file specified by
     ;; Disable
     (persist-text-scale--cancel-timer)
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save-file)
+
+    (remove-hook 'find-file-hook #'persist-text-scale-restore)
 
     (remove-hook 'minibuffer-setup-hook #'persist-text-scale-restore)
 
