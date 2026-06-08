@@ -522,12 +522,32 @@ alist."
                   (push (cons buffer-category new-data)
                         persist-text-scale--data))))))))))
 
+(defun persist-text-scale-load-file ()
+  "Load data from `persist-text-scale-file'."
+  (condition-case err
+      (load persist-text-scale-file t t t)
+    (error
+     (message "[persist-text-scale] Failed to load data file: %s"
+              (error-message-string err))
+     (setq persist-text-scale--data nil))))
+
+(defun persist-text-scale-cleanup ()
+  "Delete old entries."
+  (when persist-text-scale-history-length
+    (persist-text-scale--sort)
+    (setq persist-text-scale--data
+          (last persist-text-scale--data persist-text-scale-history-length))))
+
+;;; Mode
+
+;;;###autoload
 (defun persist-text-scale-save-file ()
   "Save the current text scale data to `persist-text-scale-file'.
 
 This function writes the text scale data to the file specified by
 `persist-text-scale-file', preserving the state for future sessions.
 It uses an atomic write strategy to prevent file corruption."
+  (interactive)
   (persist-text-scale-cleanup)
   (let* ((actual-file (expand-file-name persist-text-scale-file))
          (dir (file-name-directory actual-file)))
@@ -562,24 +582,6 @@ It uses an atomic write strategy to prevent file corruption."
               (rename-file tmp-file actual-file t))
           (when (and tmp-file (file-regular-p tmp-file))
             (ignore-errors (delete-file tmp-file))))))))
-
-(defun persist-text-scale-load-file ()
-  "Load data from `persist-text-scale-file'."
-  (condition-case err
-      (load persist-text-scale-file t t t)
-    (error
-     (message "[persist-text-scale] Failed to load data file: %s"
-              (error-message-string err))
-     (setq persist-text-scale--data nil))))
-
-(defun persist-text-scale-cleanup ()
-  "Delete old entries."
-  (when persist-text-scale-history-length
-    (persist-text-scale--sort)
-    (setq persist-text-scale--data
-          (last persist-text-scale--data persist-text-scale-history-length))))
-
-;;; Mode
 
 ;;;###autoload
 (defun persist-text-scale-reset (&optional confirm)
