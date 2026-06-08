@@ -530,40 +530,38 @@ This function writes the text scale data to the file specified by
 It uses an atomic write strategy to prevent file corruption."
   (persist-text-scale-cleanup)
   (let* ((actual-file (expand-file-name persist-text-scale-file))
-         (dir (file-name-directory actual-file))
-         (temp-file (concat actual-file ".tmp"))
-         success)
+         (dir (file-name-directory actual-file)))
     (when dir
       (make-directory dir t))
 
-    (unwind-protect
-        (with-temp-buffer
-          (insert
-           ";; -*- mode: emacs-lisp; lexical-binding: t; coding: utf-8-unix -*-\n")
-          (insert ";; Persist Text Scale file, automatically generated "
-                  "by `persist-text-scale'.\n")
+    (with-temp-buffer
+      (insert
+       ";; -*- mode: emacs-lisp; lexical-binding: t; coding: utf-8-unix -*-\n")
+      (insert ";; Persist Text Scale file, automatically generated "
+              "by `persist-text-scale'.\n")
 
-          (insert "(setq persist-text-scale--data ")
-          (when persist-text-scale--data
-            (insert "'"))
-          (prin1 persist-text-scale--data (current-buffer))
-          (insert ")\n\n")
+      (insert "(setq persist-text-scale--data ")
+      (when persist-text-scale--data
+        (insert "'"))
+      (prin1 persist-text-scale--data (current-buffer))
+      (insert ")\n\n")
 
-          (insert "(setq persist-text-scale--last-text-scale-amount ")
-          (prin1 persist-text-scale--last-text-scale-amount (current-buffer))
-          (insert ")\n\n")
+      (insert "(setq persist-text-scale--last-text-scale-amount ")
+      (prin1 persist-text-scale--last-text-scale-amount (current-buffer))
+      (insert ")\n\n")
 
-          (let ((coding-system-for-write 'utf-8-emacs)
-                (write-region-annotate-functions nil)
-                (write-region-post-annotation-function nil))
-            (write-region
-             (point-min) (point-max) temp-file nil 'silent))
-          (setq success t))
-      (if success
-          (rename-file temp-file actual-file t)
-        (ignore-errors
-          (when (file-exists-p temp-file)
-            (delete-file temp-file)))))))
+      (let* ((inhibit-quit t)
+             tmp-file)
+        (unwind-protect
+            (progn
+              (setq tmp-file (make-temp-file actual-file nil ".tmp"))
+              (let ((coding-system-for-write 'utf-8-emacs)
+                    (write-region-annotate-functions nil)
+                    (write-region-post-annotation-function nil))
+                (write-region (point-min) (point-max) tmp-file nil 'silent))
+              (rename-file tmp-file actual-file t))
+          (when (and tmp-file (file-regular-p tmp-file))
+            (ignore-errors (delete-file tmp-file))))))))
 
 (defun persist-text-scale-load-file ()
   "Load data from `persist-text-scale-file'."
