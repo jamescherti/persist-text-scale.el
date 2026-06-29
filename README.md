@@ -1,5 +1,5 @@
 # persist-text-scale.el - Persist and Restore the Text Scale
-![Build Status](https://github.com/jamescherti/persist-text-scale.el/actions/workflows/ci.yml/badge.svg)
+![Build Status](https://github.com/jamescherti/persist-text-scale.el/actions/workflows/melpazoid.yml/badge.svg)
 [![MELPA](https://melpa.org/packages/persist-text-scale-badge.svg)](https://melpa.org/#/persist-text-scale)
 [![MELPA Stable](https://stable.melpa.org/packages/persist-text-scale-badge.svg)](https://stable.melpa.org/#/persist-text-scale)
 ![License](https://img.shields.io/github/license/jamescherti/persist-text-scale.el)
