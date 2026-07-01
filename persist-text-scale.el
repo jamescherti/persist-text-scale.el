@@ -205,6 +205,12 @@ timer."
                             persist-text-scale-autosave-interval
                             #'persist-text-scale-save-file))))
 
+(defun persist-text-scale--resolve-path (path)
+  "Return the true name of PATH, skipping remote files for performance."
+  (if (file-remote-p path)
+      path
+    (file-truename path)))
+
 (defun persist-text-scale--buffer-category ()
   "Generate a unique name for the current buffer.
 Returns a unique identifier string based on the buffer context."
@@ -228,7 +234,7 @@ Returns a unique identifier string based on the buffer context."
                         "fib%s:%s"
                         (persist-text-scale--buffer-name-suffix-number
                          buffer-name)
-                        (file-truename file-name)))
+                        (persist-text-scale--resolve-path file-name)))
 
                       ;; Mini buffers
                       ((and (not file-name)
@@ -245,7 +251,8 @@ Returns a unique identifier string based on the buffer context."
 
                       ;; File visiting buffers
                       (file-name
-                       (format "f:%s" (file-truename file-name)))
+                       (format "f:%s"
+                               (persist-text-scale--resolve-path file-name)))
 
                       ;; Special buffers
                       ((and (not file-name)
