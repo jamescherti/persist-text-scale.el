@@ -623,6 +623,9 @@ When CONFIRM is non-nil, prompt for confirmation."
         (add-hook 'find-file-hook #'persist-text-scale-restore
                   persist-text-scale-depth-find-file)
 
+        ;; Register hook to restore scale across major mode changes
+        (add-hook 'after-change-major-mode-hook #'persist-text-scale-restore)
+
         (add-hook 'minibuffer-setup-hook #'persist-text-scale-restore)
 
         (add-hook 'window-buffer-change-functions
@@ -638,6 +641,8 @@ When CONFIRM is non-nil, prompt for confirmation."
     (remove-hook 'kill-emacs-hook #'persist-text-scale-save-file)
 
     (remove-hook 'find-file-hook #'persist-text-scale-restore)
+
+    (remove-hook 'after-change-major-mode-hook #'persist-text-scale-restore)
 
     (remove-hook 'minibuffer-setup-hook #'persist-text-scale-restore)
 
