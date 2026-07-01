@@ -172,6 +172,14 @@ This value is set by `persist-text-scale-persist'.")
 (defvar-local persist-text-scale--filename nil
   "This is used to handle renames.")
 
+;; When a file is renamed, Emacs calls normal-mode to re-apply the major mode.
+;; This runs kill-all-local-variables, which clears
+;; persist-text-scale--filename. Consequently, when persist-text-scale-restore
+;; triggers on after-change-major-mode-hook, the package treats the buffer as
+;; new, failing to migrate the text scale and leaving the old file path as a
+;; stale entry in persist-text-scale--data.
+(put 'persist-text-scale--filename 'permanent-local t)
+
 (defvar-local persist-text-scale--checked nil
   "Non-nil if the buffer's text scale has been checked or restored.")
 
