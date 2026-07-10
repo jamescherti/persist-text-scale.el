@@ -42,8 +42,8 @@ To install *persist-text-scale* from MELPA:
   ;; scale information at the specified interval.
   ;; If set to nil, disables timer-based autosaving entirely.
   (persist-text-scale-autosave-interval (* 7 60))
-  :config
-  (persist-text-scale-mode))
+  :init
+  (persist-text-scale-mode 1))
 ```
 
 ### Alternative: Doom Emacs
