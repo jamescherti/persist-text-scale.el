@@ -231,9 +231,16 @@ Returns a unique identifier string based on the buffer context."
                           (file-name (buffer-file-name base-buffer))
                           (buffer-name (buffer-name)))
                      (cond
-                      ;; Ignore old buffers
-                      ((or (string-prefix-p " *Old buffer" buffer-name)
-                           (string-prefix-p " *corfu" buffer-name))
+                      ;; Mini buffers
+                      ;; We are targeting *Minibuf and assigning it a specific
+                      ;; category to ensures that scaling in the minibuffer is
+                      ;; stable and predictable across sessions.
+                      ((and (not file-name)
+                            (string-prefix-p " *Minibuf-" buffer-name))
+                       "sp: *Minibuf")
+
+                      ;; Ignore hidden buffers and ephemeral popup buffers
+                      ((string-prefix-p " " buffer-name)
                        :ignore)
 
                       ;; File visiting indirect buffers
@@ -243,11 +250,6 @@ Returns a unique identifier string based on the buffer context."
                         (persist-text-scale--buffer-name-suffix-number
                          buffer-name)
                         (persist-text-scale--resolve-path file-name)))
-
-                      ;; Mini buffers
-                      ((and (not file-name)
-                            (or (string-prefix-p " *Minibuf" buffer-name)))
-                       "sp: *Minibuf")
 
                       ;; Special modes whose major-modes are in the same
                       ;; category
@@ -265,7 +267,6 @@ Returns a unique identifier string based on the buffer context."
                       ;; Special buffers
                       ((and (not file-name)
                             (or (string-prefix-p "*" buffer-name)
-                                (string-prefix-p " " buffer-name)
                                 (derived-mode-p 'special-mode)
                                 (minibufferp (current-buffer))))
                        (format "s%s:%s"
@@ -301,6 +302,7 @@ If the buffer category is nil or no scale amount has been stored, return nil."
   (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
                         (when (and first-check
+
                                    persist-text-scale-fallback-to-previous-scale
                                    persist-text-scale--last-text-scale-amount)
                           persist-text-scale--last-text-scale-amount)
@@ -599,23 +601,6 @@ It uses an atomic write strategy to prevent file corruption."
             (ignore-errors (delete-file tmp-file))))))))
 
 ;;;###autoload
-(defun persist-text-scale-reset (&optional confirm)
-  "Reset the text scale for all buffer categories.
-When CONFIRM is non-nil, prompt for confirmation."
-  (interactive (list t))
-  (when (or (not confirm)
-            (y-or-n-p "Reset persist text scale data for all buffers? "))
-    (dolist (buf (buffer-list))
-      (when (buffer-live-p buf)
-        (with-current-buffer buf
-          (when persist-text-scale--restored-amount
-            (setq persist-text-scale--persisted-amount nil)
-            (setq persist-text-scale--restored-amount nil))
-          (setq persist-text-scale--filename nil)
-          (setq persist-text-scale--checked nil))))
-    (setq persist-text-scale--data nil)))
-
-;;;###autoload
 (define-minor-mode persist-text-scale-mode
   "Persist and restore text scale."
   :global t
@@ -660,7 +645,13 @@ When CONFIRM is non-nil, prompt for confirmation."
     (remove-hook 'text-scale-mode-hook
                  #'persist-text-scale--text-scale-mode-hook)
 
-    (persist-text-scale-reset)))
+    (dolist (buf (buffer-list))
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (setq persist-text-scale--persisted-amount nil)
+          (setq persist-text-scale--restored-amount nil)
+          (setq persist-text-scale--filename nil)
+          (setq persist-text-scale--checked nil))))))
 
 (provide 'persist-text-scale)
 ;;; persist-text-scale.el ends here
