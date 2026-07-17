@@ -224,7 +224,8 @@ timer."
 Returns a unique identifier string based on the buffer context."
   (let (result)
     (when persist-text-scale-buffer-category-function
-      (setq result (funcall persist-text-scale-buffer-category-function)))
+      (with-demoted-errors "[persist-text-scale] Restore error: %S"
+        (setq result (funcall persist-text-scale-buffer-category-function))))
 
     (unless result
       (setq result (let* ((base-buffer (buffer-base-buffer))
@@ -302,7 +303,6 @@ If the buffer category is nil or no scale amount has been stored, return nil."
   (when category
     (let ((cat-data (or (cdr (assoc category persist-text-scale--data))
                         (when (and first-check
-
                                    persist-text-scale-fallback-to-previous-scale
                                    persist-text-scale--last-text-scale-amount)
                           persist-text-scale--last-text-scale-amount)
