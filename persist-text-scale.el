@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025-2026 James Cherti | https://www.jamescherti.com/contact/
 
 ;; Author: James Cherti <https://www.jamescherti.com/contact/>
-;; Version: 1.0.7
+;; Version: 1.0.8
 ;; URL: https://github.com/jamescherti/persist-text-scale.el
 ;; Keywords: convenience, faces
 ;; Package-Requires: ((emacs "26.1"))
