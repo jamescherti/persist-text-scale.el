@@ -392,22 +392,27 @@ indirect buffers or buffers within the same category."
        (persist-text-scale--buffer-category)))))
 
 (defun persist-text-scale--handle-file-renames ()
-  "Handle file renames."
+  "Update persisted category keys when the visited file is renamed."
   (when persist-text-scale-handle-file-renames
     (when-let* ((filename (buffer-file-name (buffer-base-buffer))))
-      (cond
-       (persist-text-scale--filename
-        (let ((new-filename (file-truename filename)))
-          (unless (string= persist-text-scale--filename new-filename)
+      (let ((resolved-name (persist-text-scale--resolve-path filename)))
+        (cond
+         (persist-text-scale--filename
+          (unless (string= persist-text-scale--filename resolved-name)
             (persist-text-scale--verbose-message
-              "Persisting text scale settings due to file rename: %s -> %s"
-              persist-text-scale--filename new-filename)
-            (setq persist-text-scale--persisted-amount nil)
-            (persist-text-scale-persist)
-            (setq persist-text-scale--filename new-filename))))
-
-       (t
-        (setq persist-text-scale--filename (file-truename filename)))))))
+              "Migrating text scale settings due to file rename: %s -> %s"
+              persist-text-scale--filename resolved-name)
+            (let* ((old-cat (format "f:%s" persist-text-scale--filename))
+                   (new-cat (persist-text-scale--buffer-category))
+                   (old-entry (assoc old-cat persist-text-scale--data)))
+              (when (and old-entry new-cat)
+                (setq persist-text-scale--data
+                      (delq (assoc new-cat persist-text-scale--data)
+                            persist-text-scale--data))
+                (setcar old-entry new-cat))
+              (setq persist-text-scale--filename resolved-name))))
+         (t
+          (setq persist-text-scale--filename resolved-name)))))))
 
 (defun persist-text-scale--sort ()
   "Sort `persist-text-scale--data' using atime."
