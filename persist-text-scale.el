@@ -182,6 +182,7 @@ This value is set by `persist-text-scale-persist'.")
 
 (defvar-local persist-text-scale--checked nil
   "Non-nil if the buffer's text scale has been checked or restored.")
+(put 'persist-text-scale--checked 'permanent-local t)
 
 (defvar persist-text-scale--timer nil)
 
@@ -256,7 +257,8 @@ Returns a unique identifier string based on the buffer context."
                       ;; category
                       ((and (boundp 'major-mode)
                             (or (derived-mode-p 'woman-mode)
-                                (derived-mode-p 'help-mode)))
+                                (derived-mode-p 'help-mode)
+                                (derived-mode-p 'dired-mode)))
                        (let ((major-mode-symbol (symbol-name major-mode)))
                          (format "mm:%s" major-mode-symbol)))
 
