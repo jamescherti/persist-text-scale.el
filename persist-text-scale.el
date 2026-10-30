@@ -49,7 +49,12 @@
 ;;; Require
 
 (require 'face-remap)
-(eval-when-compile (require 'subr-x))
+
+(eval-when-compile
+  (require 'subr-x))
+
+(when (<= emacs-major-version 28)
+  (require 'subr-x))
 
 ;;; Defcustom
 
